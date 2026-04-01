@@ -437,22 +437,35 @@ function renderExpenseList() {
       ? '<img src="' + e.receipt_url + '" class="receipt-thumb" onclick="window.open(\'' + e.receipt_url + '\',\'_blank\')" title="Xem biên lai">'
       : '';
     var note = e.note ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + escHtml(e.note) + '</div>' : '';
-    var eid = e.id;
-    return '<div class="expense-item" id="exp-' + eid + '"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div class="expense-name">' + escHtml(e.name) + '</div><div class="expense-meta">' + e.date + ' · ' + escHtml(mems) + '</div>' + note + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + badge + '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:var(--blue-text);border-color:var(--blue-border)" data-eid="' + eid + '" onclick="openEdit(this)">✏️ Sửa</button><button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595" data-eid="' + eid + '" onclick="deleteExpense(this)">🗑 Xóa</button></div>' + receipt + '</div><div class="expense-amount" style="margin-left:12px;white-space:nowrap">' + fmtRaw(e.amount, e.currency) + '</div></div></div>';
+    var eid = String(e.id);
+    var html = '<div class="expense-item" id="exp-'+eid+'">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+    html += '<div style="flex:1">';
+    html += '<div class="expense-name">'+escHtml(e.name)+'</div>';
+    html += '<div class="expense-meta">'+e.date+' &middot; '+escHtml(mems)+'</div>';
+    html += note;
+    html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">';
+    html += badge;
+    html += '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:var(--blue-text);border-color:var(--blue-border)" onclick="openEditById(\''+eid+'\')">&#9999;&#65039; S&#7917;a</button>';
+    html += '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595" onclick="deleteExpenseById(\''+eid+'\')">&#128465; X&oacute;a</button>';
+    html += '</div>';
+    html += receipt;
+    html += '</div>';
+    html += '<div class="expense-amount" style="margin-left:12px;white-space:nowrap">'+fmtRaw(e.amount, e.currency)+'</div>';
+    html += '</div></div>';
+    return html;
   }).join('');
 }
 
 // ── DELETE & EDIT ──────────────────────────────────────
-async function deleteExpense(btn) {
+async function deleteExpenseById(id) {
   if (!confirm('Xóa hóa đơn này?')) return;
-  var id = btn.dataset.eid;
   expenses = expenses.filter(function(e){return String(e.id) !== String(id)});
   renderExpenseList(); updateStats();
   await sbDeleteExpense(id);
 }
 
-function openEdit(btn) {
-  var id = btn.dataset.eid;
+function openEditById(id) {
   var e = expenses.find(function(x){return String(x.id) === String(id)});
   if (!e) return;
   // Fill edit modal
@@ -510,23 +523,87 @@ function updateStats() {
     }
   });
 
-  document.getElementById('total-all').textContent = fmtVND(totalVND);
+  var totalStr = '';
+  if (totalOrigVND > 0) totalStr += Math.round(totalOrigVND).toLocaleString('vi-VN') + ' ₫';
+  if (totalOrigVND > 0 && totalOrigTWD > 0) totalStr += ' + ';
+  if (totalOrigTWD > 0) totalStr += 'NT$' + Math.round(totalOrigTWD).toLocaleString();
+  document.getElementById('total-all').textContent = totalStr || '0';
+  document.getElementById('total-all').style.fontSize = (totalOrigVND > 0 && totalOrigTWD > 0) ? '14px' : '22px';
   document.getElementById('total-members').textContent = members.length;
+
+  // Tính riêng VNĐ và TWD cho từng người
+  var perPersonVND = {}, perPersonTWD = {};
+  members.forEach(function(m){ perPersonVND[m] = 0; perPersonTWD[m] = 0; });
+  expenses.forEach(function(e){
+    var amt = e.amount;
+    var isTWD = e.currency === 'TWD';
+    if (e.type === 'shared') {
+      var share = members.length ? amt / members.length : 0;
+      members.forEach(function(m){
+        if (isTWD) perPersonTWD[m] = (perPersonTWD[m]||0) + share;
+        else perPersonVND[m] = (perPersonVND[m]||0) + share;
+      });
+    } else {
+      var mems2 = e.members||[];
+      var share2 = mems2.length ? amt / mems2.length : 0;
+      mems2.forEach(function(m){
+        if (perPersonVND[m] !== undefined) {
+          if (isTWD) perPersonTWD[m] = (perPersonTWD[m]||0) + share2;
+          else perPersonVND[m] = (perPersonVND[m]||0) + share2;
+        }
+      });
+    }
+  });
 
   var pb = document.getElementById('person-breakdown');
   if (!members.length) {
     pb.innerHTML = '<div class="empty-state">Thêm thành viên để xem</div>';
   } else {
     pb.innerHTML = members.map(function(m){
-      var amt = perPerson[m]||0;
+      var vnd = perPersonVND[m]||0;
+      var twd = perPersonTWD[m]||0;
       var initials = m.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();
-      return '<div class="person-row"><div style="display:flex;align-items:center;gap:10px"><div class="avatar">' + initials + '</div><span style="font-size:14px">' + escHtml(m) + '</span></div><span style="font-size:15px;font-weight:600">' + fmtVND(amt) + '</span></div>';
+      var amtHTML = '';
+      if (vnd > 0) amtHTML += '<div style="font-size:14px;font-weight:600;text-align:right">' + Math.round(vnd).toLocaleString('vi-VN') + ' ₫</div>';
+      if (twd > 0) amtHTML += '<div style="font-size:14px;font-weight:600;text-align:right;color:var(--blue-text)">NT$' + Math.round(twd).toLocaleString() + '</div>';
+      if (!amtHTML) amtHTML = '<div style="font-size:14px;color:var(--text3)">0 ₫</div>';
+      return '<div class="person-row"><div style="display:flex;align-items:center;gap:10px"><div class="avatar">' + initials + '</div><span style="font-size:14px">' + escHtml(m) + '</span></div><div>' + amtHTML + '</div></div>';
     }).join('');
   }
 
-  document.getElementById('type-breakdown').innerHTML =
-    '<div class="person-row"><div style="font-size:14px">🍽 Chi phí chia đều</div><span style="font-weight:600">' + fmtVND(sharedVND) + '</span></div>' +
-    '<div class="person-row"><div style="font-size:14px">🏨 Chi phí nhóm riêng</div><span style="font-weight:600">' + fmtVND(personalVND) + '</span></div>';
+  // Tách theo đơn vị tiền tệ gốc
+  var totalOrigVND = 0, totalOrigTWD = 0;
+  var sharedOrigVND = 0, sharedOrigTWD = 0;
+  var personalOrigVND = 0, personalOrigTWD = 0;
+  expenses.forEach(function(e){
+    if (e.currency === 'VND') {
+      totalOrigVND += e.amount;
+      if (e.type === 'shared') sharedOrigVND += e.amount;
+      else personalOrigVND += e.amount;
+    } else {
+      totalOrigTWD += e.amount;
+      if (e.type === 'shared') sharedOrigTWD += e.amount;
+      else personalOrigTWD += e.amount;
+    }
+  });
+
+  var tbHTML = '';
+  // Tổng VNĐ
+  if (totalOrigVND > 0) {
+    tbHTML += '<div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin:8px 0 4px">CHI BẰNG VNĐ</div>';
+    tbHTML += '<div class="person-row"><div style="font-size:14px">🍽 Chia đều</div><span style="font-weight:600">' + Math.round(sharedOrigVND).toLocaleString('vi-VN') + ' ₫</span></div>';
+    tbHTML += '<div class="person-row"><div style="font-size:14px">🏨 Nhóm riêng</div><span style="font-weight:600">' + Math.round(personalOrigVND).toLocaleString('vi-VN') + ' ₫</span></div>';
+    tbHTML += '<div class="person-row" style="background:var(--bg);margin:0 -4px;padding:8px 4px;border-radius:6px"><div style="font-size:13px;font-weight:600">Tổng VNĐ</div><span style="font-weight:700">' + Math.round(totalOrigVND).toLocaleString('vi-VN') + ' ₫</span></div>';
+  }
+  // Tổng TWD
+  if (totalOrigTWD > 0) {
+    tbHTML += '<div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin:12px 0 4px">CHI BẰNG TWD</div>';
+    tbHTML += '<div class="person-row"><div style="font-size:14px">🍽 Chia đều</div><span style="font-weight:600">NT$' + Math.round(sharedOrigTWD).toLocaleString() + '</span></div>';
+    tbHTML += '<div class="person-row"><div style="font-size:14px">🏨 Nhóm riêng</div><span style="font-weight:600">NT$' + Math.round(personalOrigTWD).toLocaleString() + '</span></div>';
+    tbHTML += '<div class="person-row" style="background:var(--bg);margin:0 -4px;padding:8px 4px;border-radius:6px"><div style="font-size:13px;font-weight:600">Tổng TWD</div><span style="font-weight:700">NT$' + Math.round(totalOrigTWD).toLocaleString() + '</span></div>';
+  }
+  if (!tbHTML) tbHTML = '<div class="empty-state" style="padding:1rem">Chưa có chi phí</div>';
+  document.getElementById('type-breakdown').innerHTML = tbHTML;
 }
 
 // ── FORMAT ─────────────────────────────────────────────
