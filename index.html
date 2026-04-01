@@ -95,14 +95,14 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
   <div class="notice warn" id="sb-notice"><span class="spinner"></span>Đang kết nối cloud...</div>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('members')">Thành viên</button>
+    <button class="tab active" onclick="switchTab('stats')">Thống kê</button>
     <button class="tab" onclick="switchTab('expense')">Thêm chi phí</button>
     <button class="tab" onclick="switchTab('list')">Danh sách</button>
-    <button class="tab" onclick="switchTab('stats')">Thống kê</button>
+    <button class="tab" onclick="switchTab('members')">Thành viên</button>
   </div>
 
   <!-- TAB: THÀNH VIÊN -->
-  <div id="tab-members" class="tab-content active">
+  <div id="tab-members" class="tab-content">
     <div class="card">
       <div class="section-title">Thành viên trong nhóm</div>
       <div class="row" style="align-items:flex-start">
@@ -170,7 +170,7 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
   </div>
 
   <!-- TAB: THỐNG KÊ -->
-  <div id="tab-stats" class="tab-content">
+  <div id="tab-stats" class="tab-content active">
     <div class="currency-toggle">
       <button class="active" id="cur-vnd" onclick="setCurrency('VND')">VNĐ ₫</button>
       <button id="cur-twd" onclick="setCurrency('TWD')">TWD NT$</button>
@@ -653,7 +653,7 @@ function exportCSV() {
 
 // ── TAB ────────────────────────────────────────────────
 function switchTab(t) {
-  var tabs = ['members','expense','list','stats'];
+  var tabs = ['stats','expense','list','members'];
   document.querySelectorAll('.tab').forEach(function(el,i){el.classList.toggle('active', tabs[i] === t)});
   document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
   document.getElementById('tab-' + t).classList.add('active');
@@ -670,6 +670,7 @@ function setNotice(type, msg) {
 // ── INIT ───────────────────────────────────────────────
 function init() {
   document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+  updateStats();
 }
 
 function startSupabase() {
