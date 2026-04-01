@@ -438,20 +438,22 @@ function renderExpenseList() {
       : '';
     var note = e.note ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + escHtml(e.note) + '</div>' : '';
     var eid = e.id;
-    return '<div class="expense-item" id="exp-' + eid + '"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div class="expense-name">' + escHtml(e.name) + '</div><div class="expense-meta">' + e.date + ' · ' + escHtml(mems) + '</div>' + note + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + badge + '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:var(--blue-text);border-color:var(--blue-border)" onclick="openEdit(' + JSON.stringify(eid) + ')">✏️ Sửa</button><button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595" onclick="deleteExpense(' + JSON.stringify(eid) + ')">🗑 Xóa</button></div>' + receipt + '</div><div class="expense-amount" style="margin-left:12px;white-space:nowrap">' + fmtRaw(e.amount, e.currency) + '</div></div></div>';
+    return '<div class="expense-item" id="exp-' + eid + '"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div class="expense-name">' + escHtml(e.name) + '</div><div class="expense-meta">' + e.date + ' · ' + escHtml(mems) + '</div>' + note + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + badge + '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:var(--blue-text);border-color:var(--blue-border)" data-eid="' + eid + '" onclick="openEdit(this)">✏️ Sửa</button><button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595" data-eid="' + eid + '" onclick="deleteExpense(this)">🗑 Xóa</button></div>' + receipt + '</div><div class="expense-amount" style="margin-left:12px;white-space:nowrap">' + fmtRaw(e.amount, e.currency) + '</div></div></div>';
   }).join('');
 }
 
 // ── DELETE & EDIT ──────────────────────────────────────
-async function deleteExpense(id) {
+async function deleteExpense(btn) {
   if (!confirm('Xóa hóa đơn này?')) return;
-  expenses = expenses.filter(function(e){return e.id !== id});
+  var id = btn.dataset.eid;
+  expenses = expenses.filter(function(e){return String(e.id) !== String(id)});
   renderExpenseList(); updateStats();
   await sbDeleteExpense(id);
 }
 
-function openEdit(id) {
-  var e = expenses.find(function(x){return x.id === id});
+function openEdit(btn) {
+  var id = btn.dataset.eid;
+  var e = expenses.find(function(x){return String(x.id) === String(id)});
   if (!e) return;
   // Fill edit modal
   document.getElementById('edit-id').value = id;
