@@ -6,536 +6,482 @@
 <title>Chi phí du lịch nhóm</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#ffffff;--bg2:#f5f5f3;--bg3:#ebebea;
-    --text:#1a1a1a;--text2:#6b6b6b;--text3:#999;
-    --border:#e0e0e0;--border2:#c8c8c8;
-    --green-bg:#EAF3DE;--green-text:#27500A;--green-border:#C0DD97;
-    --blue-bg:#E6F1FB;--blue-text:#185FA5;
-    --amber-bg:#FAEEDA;--amber-text:#633806;--amber-border:#FAC775;
-    --radius:10px;--radius-sm:7px;
-  }
-  @media(prefers-color-scheme:dark){
-    :root{
-      --bg:#1c1c1c;--bg2:#252525;--bg3:#2e2e2e;
-      --text:#f0f0f0;--text2:#aaa;--text3:#666;
-      --border:#3a3a3a;--border2:#555;
-    }
-  }
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0ede8;min-height:100vh;color:var(--text)}
-  .app{max-width:480px;margin:0 auto;padding:0 0 80px}
-  .header{background:var(--bg);padding:1.25rem 1.25rem 0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
-  .header h1{font-size:18px;font-weight:600}
-  .header p{font-size:12px;color:var(--text2);margin-top:2px;padding-bottom:12px}
-  .tabs{display:flex;gap:2px;padding:8px 0 0}
-  .tab{flex:1;padding:8px 4px;font-size:12px;font-weight:500;border:none;background:transparent;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all 0.15s}
-  .tab.active{color:var(--text);border-bottom-color:var(--text)}
-  .content{padding:1rem}
-  .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:0.75rem}
-  .section-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px}
-  label{font-size:13px;color:var(--text2);display:block;margin-bottom:4px;margin-top:10px}
-  label:first-of-type{margin-top:0}
-  input[type=text],input[type=number],input[type=date],select,textarea{
-    width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
-    font-family:inherit;font-size:14px;background:var(--bg);color:var(--text);
-  }
-  input:focus,select:focus{outline:none;border-color:var(--border2)}
-  .row{display:flex;gap:8px}
-  .row>*{flex:1}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:500;background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s;text-decoration:none}
-  .btn:hover{background:var(--bg2)}
-  .btn:active{transform:scale(0.98)}
-  .btn-primary{background:var(--text);color:var(--bg);border-color:transparent;width:100%;margin-top:12px}
-  .btn-primary:hover{opacity:0.85;background:var(--text)}
-  .btn-sm{padding:5px 10px;font-size:12px}
-  .chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:13px;margin:3px}
-  .chip button{background:none;border:none;cursor:pointer;color:var(--text2);font-size:15px;line-height:1;padding:0}
-  .toggle{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius-sm);padding:3px}
-  .toggle button{flex:1;padding:7px;font-size:13px;border:none;border-radius:6px;background:transparent;cursor:pointer;color:var(--text2);font-family:inherit;transition:all 0.15s}
-  .toggle button.active{background:var(--bg);color:var(--text);border:1px solid var(--border)}
-  .check-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;user-select:none;background:var(--bg);margin:3px;transition:all 0.15s}
-  .check-chip.on{background:var(--text);color:var(--bg);border-color:transparent}
-  .expense-item{padding:10px 0;border-bottom:1px solid var(--border)}
-  .expense-item:last-child{border-bottom:none}
-  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin-top:4px}
-  .badge-s{background:var(--green-bg);color:var(--green-text)}
-  .badge-p{background:var(--blue-bg);color:var(--blue-text)}
-  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-  .stat-card{background:var(--bg2);border-radius:var(--radius-sm);padding:12px}
-  .stat-label{font-size:11px;color:var(--text2);margin-bottom:4px}
-  .stat-value{font-size:20px;font-weight:600}
-  .person-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
-  .person-row:last-child{border-bottom:none}
-  .avatar{width:32px;height:32px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue-text);flex-shrink:0}
-  .notice{padding:10px 14px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:10px;line-height:1.5}
-  .notice-amber{background:var(--amber-bg);color:var(--amber-text);border:1px solid var(--amber-border)}
-  .notice-green{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green-border)}
-  .empty{text-align:center;padding:2rem;color:var(--text2);font-size:14px;line-height:1.6}
-  .receipt-thumb{width:60px;height:45px;object-fit:cover;border-radius:6px;border:1px solid var(--border);margin-top:6px;cursor:pointer}
-  .receipt-full{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:100;cursor:pointer}
-  .receipt-full img{max-width:90vw;max-height:90vh;border-radius:8px}
-  .tab-content{display:none}
-  .tab-content.active{display:block}
-  .loading{opacity:0.5;pointer-events:none}
-  input[type=file]{padding:6px;font-size:13px}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f3;--surface:#ffffff;--border:#e5e3dc;--border2:#cccac0;
+  --text:#1a1a18;--text2:#6b6960;--text3:#9b9890;
+  --green-bg:#e1f5ee;--green-text:#0f6e56;--green-border:#9fe1cb;
+  --blue-bg:#e6f1fb;--blue-text:#185fa5;--blue-border:#b5d4f4;
+  --amber-bg:#faeeda;--amber-text:#633806;--amber-border:#fac775;
+  --radius:10px;--radius-sm:7px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+.app{max-width:480px;margin:0 auto;padding:1rem}
+.header{padding:1.5rem 0 1rem;border-bottom:0.5px solid var(--border);margin-bottom:1rem}
+.header h1{font-size:22px;font-weight:600;letter-spacing:-0.3px}
+.header p{font-size:13px;color:var(--text2);margin-top:4px}
+.notice{border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;font-size:12px;line-height:1.5}
+.notice.warn{background:var(--amber-bg);border:0.5px solid var(--amber-border);color:var(--amber-text)}
+.notice.ok{background:var(--green-bg);border:0.5px solid var(--green-border);color:var(--green-text)}
+.tabs{display:flex;gap:4px;background:#eae8e1;border-radius:var(--radius);padding:4px;margin-bottom:1rem}
+.tab{flex:1;padding:8px 4px;font-size:12px;font-weight:500;border:none;background:transparent;border-radius:7px;cursor:pointer;color:var(--text2);transition:all 0.15s}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:0.75rem}
+.section-title{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.8px}
+label{font-size:13px;color:var(--text2);display:block;margin-bottom:4px}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:9px 12px;border:0.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:14px;background:var(--surface);color:var(--text);margin-bottom:10px;
+  font-family:inherit;transition:border-color 0.15s
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--border2)}
+input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border-radius:var(--radius-sm);font-size:13px;margin-bottom:10px;background:var(--bg)}
+.btn{width:100%;padding:10px;border:0.5px solid var(--border2);border-radius:var(--radius-sm);font-size:14px;font-weight:500;background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s;font-family:inherit}
+.btn:hover{background:var(--bg)}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:var(--text);color:var(--surface);border-color:transparent}
+.btn-primary:hover{opacity:0.85;background:var(--text)}
+.btn-sm{width:auto;padding:6px 12px;font-size:12px}
+.btn-danger{border-color:#f09595;color:#a32d2d}
+.btn-danger:hover{background:#fcebeb}
+.member-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:0.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:13px;margin:3px}
+.member-chip button{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:0}
+.expense-item{border-bottom:0.5px solid var(--border);padding:12px 0}
+.expense-item:last-child{border-bottom:none}
+.expense-name{font-size:14px;font-weight:500}
+.expense-meta{font-size:12px;color:var(--text2);margin-top:3px}
+.expense-amount{font-size:15px;font-weight:600}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin-top:4px}
+.badge-shared{background:var(--green-bg);color:var(--green-text)}
+.badge-personal{background:var(--blue-bg);color:var(--blue-text)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0.75rem}
+.stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:0.875rem 1rem}
+.stat-label{font-size:12px;color:var(--text2);margin-bottom:4px}
+.stat-value{font-size:22px;font-weight:600;letter-spacing:-0.5px}
+.person-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.person-row:last-child{border-bottom:none}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue-text);flex-shrink:0}
+.currency-toggle{display:flex;gap:4px;margin-bottom:12px}
+.currency-toggle button{flex:1;padding:7px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:transparent;cursor:pointer;color:var(--text2);font-family:inherit;transition:all 0.15s}
+.currency-toggle button.active{background:var(--text);color:var(--surface);border-color:transparent}
+.checkbox-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.checkbox-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:0.5px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;user-select:none;background:var(--surface);transition:all 0.15s}
+.checkbox-chip.selected{background:var(--text);color:var(--surface);border-color:transparent}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.empty-state{text-align:center;padding:2rem 1rem;color:var(--text2);font-size:14px;line-height:1.7}
+.receipt-thumb{width:56px;height:42px;object-fit:cover;border-radius:5px;border:0.5px solid var(--border);margin-top:6px;cursor:pointer}
+.receipt-preview-lg{width:100%;max-height:200px;object-fit:contain;border-radius:var(--radius-sm);border:0.5px solid var(--border);margin-top:6px;display:none}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--text2);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
 <div class="app">
   <div class="header">
     <h1>✈️ Chi phí du lịch nhóm</h1>
-    <p id="trip-desc">Quản lý chi tiêu chung & cá nhân</p>
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('members')">Thành viên</button>
-      <button class="tab" onclick="switchTab('add')">Thêm</button>
-      <button class="tab" onclick="switchTab('list')">Danh sách</button>
-      <button class="tab" onclick="switchTab('stats')">Thống kê</button>
+    <p id="trip-subtitle">Quản lý chi tiêu chung &amp; cá nhân</p>
+  </div>
+
+  <div class="notice warn" id="sb-notice"><span class="spinner"></span>Đang kết nối cloud...</div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('members')">Thành viên</button>
+    <button class="tab" onclick="switchTab('expense')">Thêm chi phí</button>
+    <button class="tab" onclick="switchTab('list')">Danh sách</button>
+    <button class="tab" onclick="switchTab('stats')">Thống kê</button>
+  </div>
+
+  <!-- TAB: THÀNH VIÊN -->
+  <div id="tab-members" class="tab-content active">
+    <div class="card">
+      <div class="section-title">Thành viên trong nhóm</div>
+      <div class="row" style="align-items:flex-start">
+        <input type="text" id="member-input" placeholder="Nhập tên..." style="margin:0" onkeydown="if(event.key==='Enter')addMember()">
+        <button class="btn btn-sm btn-primary" onclick="addMember()" style="margin-top:0;white-space:nowrap">+ Thêm</button>
+      </div>
+      <div id="member-chips" style="margin-top:10px"></div>
     </div>
   </div>
 
-  <div class="content">
+  <!-- TAB: THÊM CHI PHÍ -->
+  <div id="tab-expense" class="tab-content">
+    <div class="card">
+      <div class="section-title">Loại chi phí</div>
+      <div class="currency-toggle" style="margin-bottom:14px">
+        <button class="active" id="type-shared" onclick="setExpenseType('shared')">🍽 Chia đều tất cả</button>
+        <button id="type-personal" onclick="setExpenseType('personal')">🏨 Nhóm riêng</button>
+      </div>
 
-    <!-- TAB: MEMBERS -->
-    <div id="tab-members" class="tab-content active">
-      <div class="card">
-        <div class="section-label">Thành viên nhóm</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <input type="text" id="member-input" placeholder="Tên thành viên..." onkeydown="if(event.key==='Enter')addMember()" style="flex:1">
-          <button class="btn btn-sm" onclick="addMember()">+ Thêm</button>
+      <label>Tên chi phí *</label>
+      <input type="text" id="exp-name" placeholder="VD: Bữa tối nhà hàng, Khách sạn A...">
+
+      <label>Ngày phát sinh *</label>
+      <input type="date" id="exp-date">
+
+      <div class="row">
+        <div>
+          <label>Số tiền *</label>
+          <input type="number" id="exp-amount" placeholder="0" min="0">
         </div>
-        <div id="member-chips"><span style="font-size:13px;color:var(--text2)">Chưa có thành viên</span></div>
+        <div>
+          <label>Đơn vị</label>
+          <select id="exp-currency">
+            <option value="VND">VNĐ ₫</option>
+            <option value="TWD">TWD NT$</option>
+          </select>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="section-label">Supabase — Lưu cloud</div>
-        <div id="sb-notice" class="notice notice-amber">Chưa kết nối — dữ liệu lưu tạm trên máy. Điền credentials để đồng bộ cloud.</div>
-        <label>Project URL</label>
-        <input type="text" id="sb-url" placeholder="https://abcdefgh.supabase.co">
-        <label>Anon public key</label>
-        <input type="text" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-        <button class="btn btn-primary" onclick="connectSupabase()">Kết nối Supabase →</button>
-        <p style="font-size:11px;color:var(--text2);margin-top:8px">Tạo free account tại <a href="https://supabase.com" target="_blank">supabase.com</a></p>
+      <div id="personal-members" style="display:none">
+        <label>Áp dụng cho thành viên *</label>
+        <div id="member-checkboxes" class="checkbox-group"></div>
       </div>
+
+      <label>Ghi chú</label>
+      <input type="text" id="exp-note" placeholder="Ghi chú thêm...">
+
+      <label>Ảnh biên lai</label>
+      <input type="file" id="exp-receipt" accept="image/*" capture="environment" onchange="previewReceipt(this)">
+      <img id="receipt-preview" class="receipt-preview-lg">
+
+      <button class="btn btn-primary" id="save-btn" onclick="addExpense()">💾 Lưu chi phí</button>
     </div>
-
-    <!-- TAB: ADD EXPENSE -->
-    <div id="tab-add" class="tab-content">
-      <div class="card">
-        <div class="section-label">Loại chi phí</div>
-        <div class="toggle" style="margin-bottom:14px">
-          <button class="active" id="btn-shared" onclick="setType('shared')">Chia đều tất cả</button>
-          <button id="btn-personal" onclick="setType('personal')">Nhóm riêng</button>
-        </div>
-
-        <label>Tên chi phí</label>
-        <input type="text" id="exp-name" placeholder="VD: Bữa tối, Vé tàu...">
-
-        <label>Ngày phát sinh</label>
-        <input type="date" id="exp-date">
-
-        <div class="row">
-          <div>
-            <label>Số tiền</label>
-            <input type="number" id="exp-amount" placeholder="0" min="0">
-          </div>
-          <div>
-            <label>Đơn vị</label>
-            <select id="exp-currency">
-              <option value="VND">VNĐ ₫</option>
-              <option value="TWD">TWD NT$</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="personal-section" style="display:none">
-          <label>Áp dụng cho</label>
-          <div id="exp-member-chips" style="margin-bottom:6px"></div>
-        </div>
-
-        <label>Ghi chú (tuỳ chọn)</label>
-        <input type="text" id="exp-note" placeholder="Nhập ghi chú...">
-
-        <label>Ảnh biên lai (tuỳ chọn)</label>
-        <input type="file" id="exp-receipt" accept="image/*" capture="environment" onchange="previewImg(this)">
-        <img id="img-preview" style="display:none;width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-top:6px;border:1px solid var(--border)">
-
-        <button class="btn btn-primary" onclick="saveExpense()">Lưu chi phí →</button>
-      </div>
-    </div>
-
-    <!-- TAB: LIST -->
-    <div id="tab-list" class="tab-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span id="count-label" style="font-size:13px;color:var(--text2)">0 chi phí</span>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-sm" onclick="exportCSV()">Xuất CSV</button>
-          <button class="btn btn-sm" onclick="exportPDF()">Xuất PDF</button>
-        </div>
-      </div>
-      <div class="card" id="expense-list"><div class="empty">Chưa có chi phí.<br>Thêm từ tab "Thêm"</div></div>
-    </div>
-
-    <!-- TAB: STATS -->
-    <div id="tab-stats" class="tab-content">
-      <div class="toggle" style="margin-bottom:12px">
-        <button class="active" id="cur-vnd" onclick="setCur('VND')">VNĐ ₫</button>
-        <button id="cur-twd" onclick="setCur('TWD')">TWD NT$</button>
-      </div>
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">Tổng chi phí</div><div class="stat-value" id="st-total">0</div></div>
-        <div class="stat-card"><div class="stat-label">Số thành viên</div><div class="stat-value" id="st-members">0</div></div>
-        <div class="stat-card"><div class="stat-label">Chi phí chung</div><div class="stat-value" id="st-shared">0</div></div>
-        <div class="stat-card"><div class="stat-label">Chi phí riêng</div><div class="stat-value" id="st-personal">0</div></div>
-      </div>
-      <div class="card">
-        <div class="section-label">Chi phí từng người</div>
-        <div id="person-stats"><div class="empty">Thêm thành viên và chi phí để xem</div></div>
-      </div>
-    </div>
-
   </div>
-</div>
 
-<!-- Image lightbox -->
-<div id="lightbox" class="receipt-full" style="display:none" onclick="this.style.display='none'">
-  <img id="lightbox-img" src="">
+  <!-- TAB: DANH SÁCH -->
+  <div id="tab-list" class="tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+      <span style="font-size:13px;color:var(--text2)" id="expense-count">0 chi phí</span>
+      <button class="btn btn-sm" onclick="exportCSV()">📊 Xuất CSV</button>
+    </div>
+    <div class="card" id="expense-list">
+      <div class="empty-state">Chưa có chi phí nào.<br>Thêm từ tab "Thêm chi phí"</div>
+    </div>
+  </div>
+
+  <!-- TAB: THỐNG KÊ -->
+  <div id="tab-stats" class="tab-content">
+    <div class="currency-toggle">
+      <button class="active" id="cur-vnd" onclick="setCurrency('VND')">VNĐ ₫</button>
+      <button id="cur-twd" onclick="setCurrency('TWD')">TWD NT$</button>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Tổng chi phí</div><div class="stat-value" id="total-all">0</div></div>
+      <div class="stat-card"><div class="stat-label">Số thành viên</div><div class="stat-value" id="total-members">0</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Chi phí từng người</div>
+      <div id="person-breakdown"><div class="empty-state">Thêm thành viên và chi phí để xem</div></div>
+    </div>
+    <div class="card" style="margin-top:0.75rem">
+      <div class="section-title">Tổng theo loại</div>
+      <div id="type-breakdown"></div>
+    </div>
+  </div>
 </div>
 
 <script>
-// ── STATE ──────────────────────────────────────────
-var members = JSON.parse(localStorage.getItem('tm')||'[]');
-var expenses = JSON.parse(localStorage.getItem('te')||'[]');
-var expType = 'shared';
-var dispCur = 'VND';
-var sb = null;
-var TWD = 800; // 1 TWD = 800 VND (approximate)
+var SB_URL = 'https://nupgaezitixhfhghrfoq.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51cGdhZXppdGl4aGZoZ2hyZm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzEyOTQsImV4cCI6MjA5MDYwNzI5NH0.3bXj7HFgK8FCmmQRJHyk7DSoW-e_2pG5gvZ93bQEK68';
 
-// ── SUPABASE ───────────────────────────────────────
-function connectSupabase() {
-  var url = document.getElementById('sb-url').value.trim();
-  var key = document.getElementById('sb-key').value.trim();
-  if (!url || !key) { alert('Vui lòng điền URL và Key'); return; }
-  try {
-    sb = supabase.createClient(url, key);
-    localStorage.setItem('sb_url', url);
-    localStorage.setItem('sb_key', key);
-    var n = document.getElementById('sb-notice');
-    n.className = 'notice notice-green';
-    n.textContent = '✓ Supabase đã kết nối — dữ liệu sẽ đồng bộ cloud.';
-    syncFromSupabase();
-  } catch(e) { alert('Lỗi kết nối: ' + e.message); }
-}
+var members = [];
+var expenses = [];
+var expenseType = 'shared';
+var displayCurrency = 'VND';
+var TWD_TO_VND = 800;
+var supabase = null;
+var BUCKET = 'receipts';
 
+// ── SUPABASE ───────────────────────────────────────────
 async function syncFromSupabase() {
-  if (!sb) return;
-  var { data: m } = await sb.from('members').select('name').order('created_at');
-  var { data: e } = await sb.from('expenses').select('*').order('created_at');
-  if (m) { members = m.map(function(x){return x.name}); }
-  if (e) { expenses = e.map(function(x){ return { id:x.id, name:x.name, date:x.date, amount:x.amount, currency:x.currency, type:x.type, members:x.members, note:x.note||'', receipt:x.receipt_url||null }; }); }
-  persist(); renderAll();
+  var r1 = await supabase.from('members').select('*').order('created_at');
+  if (r1.data) members = r1.data.map(function(m){return m.name});
+  var r2 = await supabase.from('expenses').select('*').order('created_at', {ascending:false});
+  if (r2.data) expenses = r2.data;
+  renderMembers();
+  renderMemberCheckboxes();
+  renderExpenseList();
+  updateStats();
+  setNotice('ok', '✅ Đã kết nối cloud — dữ liệu đồng bộ real-time.');
 }
 
-async function sbAddMember(name) {
-  if (!sb) return;
-  await sb.from('members').insert({ name: name });
+async function sbInsertMember(name) {
+  var r = await supabase.from('members').insert({name:name});
+  if (r.error) alert('Lỗi lưu thành viên: ' + r.error.message);
 }
 
-async function sbRemoveMember(name) {
-  if (!sb) return;
-  await sb.from('members').delete().eq('name', name);
+async function sbDeleteMember(name) {
+  await supabase.from('members').delete().eq('name', name);
 }
 
-async function sbAddExpense(exp) {
-  if (!sb) return;
-  await sb.from('expenses').insert({
-    id: exp.id, name: exp.name, date: exp.date,
-    amount: exp.amount, currency: exp.currency,
-    type: exp.type, members: exp.members,
-    note: exp.note, receipt_url: exp.receipt
-  });
-}
-
-async function sbUploadReceipt(file, id) {
-  if (!sb) return null;
-  var ext = file.name.split('.').pop();
-  var path = 'receipt-' + id + '.' + ext;
-  var { error } = await sb.storage.from('receipts').upload(path, file);
-  if (error) return null;
-  var { data } = sb.storage.from('receipts').getPublicUrl(path);
-  return data.publicUrl;
-}
-
-// Try auto-reconnect
-(function(){
-  var u = localStorage.getItem('sb_url');
-  var k = localStorage.getItem('sb_key');
-  if (u && k) {
-    document.getElementById('sb-url').value = u;
-    document.getElementById('sb-key').value = k;
-    try {
-      sb = supabase.createClient(u, k);
-      var n = document.getElementById('sb-notice');
-      n.className = 'notice notice-green';
-      n.textContent = '✓ Supabase đã kết nối.';
-      syncFromSupabase();
-    } catch(e) {}
+async function sbInsertExpense(exp) {
+  var payload = {
+    name: exp.name, date: exp.date, amount: exp.amount,
+    currency: exp.currency, type: exp.type,
+    members: exp.members, note: exp.note||''
+  };
+  if (exp.receiptFile) {
+    var path = 'receipt-' + Date.now() + '.jpg';
+    var up = await supabase.storage.from(BUCKET).upload(path, exp.receiptFile, {contentType: exp.receiptFile.type || 'image/jpeg'});
+    if (!up.error) {
+      var pub = supabase.storage.from(BUCKET).getPublicUrl(path);
+      payload.receipt_url = pub.data.publicUrl;
+    }
   }
-})();
-
-// ── MEMBERS ───────────────────────────────────────
-function addMember() {
-  var v = document.getElementById('member-input').value.trim();
-  if (!v || members.includes(v)) return;
-  members.push(v);
-  persist();
-  sbAddMember(v);
-  renderMembers(); renderExpMemberChips(); updateStats();
-  document.getElementById('member-input').value = '';
+  var r = await supabase.from('expenses').insert(payload).select();
+  if (r.error) { alert('Lỗi lưu chi phí: ' + r.error.message); return null; }
+  return r.data ? r.data[0] : null;
 }
 
-function removeMember(m) {
-  if (!confirm('Xoá thành viên ' + m + '?')) return;
-  members = members.filter(function(x){return x!==m});
-  persist(); sbRemoveMember(m);
-  renderMembers(); renderExpMemberChips(); updateStats();
+// ── MEMBERS ────────────────────────────────────────────
+async function addMember() {
+  var v = document.getElementById('member-input').value.trim();
+  if (!v) { alert('Nhập tên thành viên'); return; }
+  if (members.includes(v)) { alert('Tên này đã tồn tại'); return; }
+  members.push(v);
+  renderMembers();
+  renderMemberCheckboxes();
+  updateStats();
+  document.getElementById('member-input').value = '';
+  await sbInsertMember(v);
+}
+
+async function removeMember(m) {
+  if (!confirm('Xoá thành viên "' + m + '"?')) return;
+  members = members.filter(function(x){return x !== m});
+  renderMembers();
+  renderMemberCheckboxes();
+  updateStats();
+  await sbDeleteMember(m);
 }
 
 function renderMembers() {
   var el = document.getElementById('member-chips');
-  if (!members.length) { el.innerHTML = '<span style="font-size:13px;color:var(--text2)">Chưa có thành viên</span>'; return; }
+  document.getElementById('total-members').textContent = members.length;
+  if (!members.length) {
+    el.innerHTML = '<span style="font-size:13px;color:var(--text2)">Chưa có thành viên nào</span>';
+    return;
+  }
   el.innerHTML = members.map(function(m){
-    return '<span class="chip">'+esc(m)+'<button onclick="removeMember(\''+esc(m)+'\')">×</button></span>';
-  }).join('');
-  document.getElementById('st-members').textContent = members.length;
-}
-
-// ── EXPENSE TYPE ──────────────────────────────────
-function setType(t) {
-  expType = t;
-  document.getElementById('btn-shared').classList.toggle('active', t==='shared');
-  document.getElementById('btn-personal').classList.toggle('active', t==='personal');
-  document.getElementById('personal-section').style.display = t==='personal' ? 'block' : 'none';
-}
-
-function renderExpMemberChips() {
-  var el = document.getElementById('exp-member-chips');
-  el.innerHTML = members.map(function(m){
-    return '<span class="check-chip" data-m="'+esc(m)+'" onclick="toggleMChip(this)">'+esc(m)+'</span>';
+    return '<span class="member-chip"><span>' + escHtml(m) + '</span><button onclick="removeMember(\'' + escHtml(m) + '\')">×</button></span>';
   }).join('');
 }
 
-function toggleMChip(el) { el.classList.toggle('on'); }
+function renderMemberCheckboxes() {
+  var el = document.getElementById('member-checkboxes');
+  el.innerHTML = members.map(function(m){
+    return '<span class="checkbox-chip" data-member="' + escHtml(m) + '" onclick="this.classList.toggle(\'selected\')">' + escHtml(m) + '</span>';
+  }).join('');
+}
 
-// ── RECEIPT PREVIEW ───────────────────────────────
-function previewImg(input) {
-  var p = document.getElementById('img-preview');
+// ── EXPENSE FORM ───────────────────────────────────────
+function setExpenseType(t) {
+  expenseType = t;
+  document.getElementById('type-shared').classList.toggle('active', t === 'shared');
+  document.getElementById('type-personal').classList.toggle('active', t === 'personal');
+  document.getElementById('personal-members').style.display = t === 'personal' ? 'block' : 'none';
+}
+
+function previewReceipt(input) {
+  var preview = document.getElementById('receipt-preview');
   if (input.files && input.files[0]) {
-    var r = new FileReader();
-    r.onload = function(e){ p.src = e.target.result; p.style.display='block'; };
-    r.readAsDataURL(input.files[0]);
+    var reader = new FileReader();
+    reader.onload = function(e){ preview.src = e.target.result; preview.style.display = 'block'; };
+    reader.readAsDataURL(input.files[0]);
   }
 }
 
-function showLightbox(src) {
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lightbox').style.display = 'flex';
-}
-
-// ── SAVE EXPENSE ──────────────────────────────────
-async function saveExpense() {
+async function addExpense() {
   var name = document.getElementById('exp-name').value.trim();
   var date = document.getElementById('exp-date').value;
   var amount = parseFloat(document.getElementById('exp-amount').value);
   var currency = document.getElementById('exp-currency').value;
   var note = document.getElementById('exp-note').value.trim();
-  var fileInput = document.getElementById('exp-receipt');
 
-  if (!name || !date || !amount) { alert('Vui lòng điền: tên, ngày, số tiền'); return; }
+  if (!name || !date || !amount) { alert('Điền đầy đủ: tên, ngày, số tiền'); return; }
 
   var forMembers = members.slice();
-  if (expType === 'personal') {
-    forMembers = Array.from(document.querySelectorAll('.check-chip.on')).map(function(c){return c.dataset.m});
+  if (expenseType === 'personal') {
+    forMembers = [];
+    document.querySelectorAll('#member-checkboxes .selected').forEach(function(el){
+      forMembers.push(el.dataset.member);
+    });
     if (!forMembers.length) { alert('Chọn ít nhất 1 thành viên'); return; }
   }
 
-  var id = Date.now().toString();
-  var receiptUrl = null;
+  var receiptFile = null;
+  var fileInput = document.getElementById('exp-receipt');
+  if (fileInput.files && fileInput.files[0]) receiptFile = fileInput.files[0];
 
-  var p = document.getElementById('img-preview');
-  if (p.style.display !== 'none') receiptUrl = p.src;
+  var btn = document.getElementById('save-btn');
+  btn.textContent = '⏳ Đang lưu...';
+  btn.disabled = true;
 
-  // Upload to Supabase storage if connected
-  if (sb && fileInput.files && fileInput.files[0]) {
-    var uploaded = await sbUploadReceipt(fileInput.files[0], id);
-    if (uploaded) receiptUrl = uploaded;
+  var exp = {
+    id: Date.now(), name: name, date: date, amount: amount,
+    currency: currency, type: expenseType,
+    members: forMembers, note: note,
+    receipt_url: null, receiptFile: receiptFile
+  };
+
+  var saved = await sbInsertExpense(exp);
+  if (saved) {
+    expenses.unshift(saved);
+  } else {
+    exp.receiptFile = null;
+    expenses.unshift(exp);
   }
 
-  var exp = { id:id, name:name, date:date, amount:amount, currency:currency, type:expType, members:forMembers, note:note, receipt:receiptUrl };
-  expenses.push(exp);
-  persist(); sbAddExpense(exp);
+  // reset form
+  document.getElementById('exp-name').value = '';
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-note').value = '';
+  document.getElementById('receipt-preview').style.display = 'none';
+  fileInput.value = '';
+  document.querySelectorAll('#member-checkboxes .selected').forEach(function(c){c.classList.remove('selected')});
+  btn.textContent = '💾 Lưu chi phí';
+  btn.disabled = false;
 
-  // Reset form
-  document.getElementById('exp-name').value='';
-  document.getElementById('exp-amount').value='';
-  document.getElementById('exp-note').value='';
-  document.getElementById('exp-receipt').value='';
-  document.getElementById('img-preview').style.display='none';
-  document.querySelectorAll('.check-chip.on').forEach(function(c){c.classList.remove('on')});
-
-  renderExpenseList(); updateStats();
+  renderExpenseList();
+  updateStats();
   switchTab('list');
 }
 
-// ── EXPENSE LIST ──────────────────────────────────
+// ── RENDER LIST ────────────────────────────────────────
 function renderExpenseList() {
   var el = document.getElementById('expense-list');
-  document.getElementById('count-label').textContent = expenses.length + ' chi phí';
-  if (!expenses.length) { el.innerHTML = '<div class="empty">Chưa có chi phí.<br>Thêm từ tab "Thêm"</div>'; return; }
-  el.innerHTML = expenses.slice().reverse().map(function(e){
-    var badge = e.type==='shared'
-      ? '<span class="badge badge-s">Chia đều</span>'
-      : '<span class="badge badge-p">'+esc(e.members.join(', '))+'</span>';
-    var receipt = e.receipt
-      ? '<img src="'+e.receipt+'" class="receipt-thumb" onclick="showLightbox(\''+e.receipt+'\')" alt="biên lai">'
+  document.getElementById('expense-count').textContent = expenses.length + ' chi phí';
+  if (!expenses.length) {
+    el.innerHTML = '<div class="empty-state">Chưa có chi phí nào.<br>Thêm từ tab "Thêm chi phí"</div>';
+    return;
+  }
+  el.innerHTML = expenses.map(function(e){
+    var badge = e.type === 'shared'
+      ? '<span class="badge badge-shared">Chia đều</span>'
+      : '<span class="badge badge-personal">Nhóm riêng</span>';
+    var mems = e.type === 'shared' ? 'Tất cả' : (e.members||[]).join(', ');
+    var receipt = e.receipt_url
+      ? '<img src="' + e.receipt_url + '" class="receipt-thumb" onclick="window.open(\'' + e.receipt_url + '\',\'_blank\')" title="Xem biên lai">'
       : '';
-    return '<div class="expense-item"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="font-size:14px;font-weight:500">'+esc(e.name)+'</div><div style="font-size:12px;color:var(--text2);margin-top:2px">'+e.date+(e.note?' · '+esc(e.note):'')+'</div>'+badge+receipt+'</div><div style="font-size:15px;font-weight:600;white-space:nowrap;padding-left:8px">'+fmtAmt(e.amount,e.currency)+'</div></div></div>';
+    var note = e.note ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + escHtml(e.note) + '</div>' : '';
+    return '<div class="expense-item"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div class="expense-name">' + escHtml(e.name) + '</div><div class="expense-meta">' + e.date + ' · ' + escHtml(mems) + '</div>' + note + '<div>' + badge + '</div>' + receipt + '</div><div class="expense-amount" style="margin-left:12px;white-space:nowrap">' + fmtRaw(e.amount, e.currency) + '</div></div></div>';
   }).join('');
 }
 
-// ── STATS ─────────────────────────────────────────
+// ── STATS ──────────────────────────────────────────────
 function updateStats() {
   var totalVND = 0, sharedVND = 0, personalVND = 0;
-  var per = {};
-  members.forEach(function(m){per[m]=0});
+  var perPerson = {};
+  members.forEach(function(m){perPerson[m] = 0});
 
   expenses.forEach(function(e){
-    var vnd = e.currency==='TWD' ? e.amount*TWD : e.amount;
+    var vnd = e.currency === 'TWD' ? e.amount * TWD_TO_VND : e.amount;
     totalVND += vnd;
-    if (e.type==='shared') {
+    if (e.type === 'shared') {
       sharedVND += vnd;
-      var s = members.length ? vnd/members.length : 0;
-      members.forEach(function(m){per[m]=(per[m]||0)+s});
+      var share = members.length ? vnd / members.length : 0;
+      members.forEach(function(m){perPerson[m] = (perPerson[m]||0) + share});
     } else {
       personalVND += vnd;
-      var s2 = e.members.length ? vnd/e.members.length : 0;
-      e.members.forEach(function(m){if(per[m]!==undefined)per[m]+=s2});
+      var mems = e.members||[];
+      var share2 = mems.length ? vnd / mems.length : 0;
+      mems.forEach(function(m){if(perPerson[m] !== undefined) perPerson[m] += share2});
     }
   });
 
-  document.getElementById('st-total').textContent = fmtVND(totalVND);
-  document.getElementById('st-members').textContent = members.length;
-  document.getElementById('st-shared').textContent = fmtVND(sharedVND);
-  document.getElementById('st-personal').textContent = fmtVND(personalVND);
+  document.getElementById('total-all').textContent = fmtVND(totalVND);
+  document.getElementById('total-members').textContent = members.length;
 
-  var el = document.getElementById('person-stats');
-  if (!members.length) { el.innerHTML='<div class="empty">Thêm thành viên để xem</div>'; return; }
-  el.innerHTML = members.map(function(m){
-    var ini = m.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();
-    return '<div class="person-row"><div style="display:flex;align-items:center;gap:10px"><div class="avatar">'+ini+'</div><span style="font-size:14px">'+esc(m)+'</span></div><span style="font-size:15px;font-weight:600">'+fmtVND(per[m]||0)+'</span></div>';
-  }).join('');
-}
-
-function fmtVND(vnd) {
-  if (dispCur==='VND') return Math.round(vnd).toLocaleString('vi-VN')+'₫';
-  return 'NT$'+Math.round(vnd/TWD).toLocaleString();
-}
-
-function fmtAmt(amount, currency) {
-  if (dispCur==='VND') {
-    var v = currency==='TWD' ? amount*TWD : amount;
-    return Math.round(v).toLocaleString('vi-VN')+'₫';
+  var pb = document.getElementById('person-breakdown');
+  if (!members.length) {
+    pb.innerHTML = '<div class="empty-state">Thêm thành viên để xem</div>';
   } else {
-    var v2 = currency==='VND' ? amount/TWD : amount;
-    return 'NT$'+Math.round(v2).toLocaleString();
+    pb.innerHTML = members.map(function(m){
+      var amt = perPerson[m]||0;
+      var initials = m.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();
+      return '<div class="person-row"><div style="display:flex;align-items:center;gap:10px"><div class="avatar">' + initials + '</div><span style="font-size:14px">' + escHtml(m) + '</span></div><span style="font-size:15px;font-weight:600">' + fmtVND(amt) + '</span></div>';
+    }).join('');
+  }
+
+  document.getElementById('type-breakdown').innerHTML =
+    '<div class="person-row"><div style="font-size:14px">🍽 Chi phí chia đều</div><span style="font-weight:600">' + fmtVND(sharedVND) + '</span></div>' +
+    '<div class="person-row"><div style="font-size:14px">🏨 Chi phí nhóm riêng</div><span style="font-weight:600">' + fmtVND(personalVND) + '</span></div>';
+}
+
+// ── FORMAT ─────────────────────────────────────────────
+function fmtVND(vnd) {
+  if (displayCurrency === 'VND') return Math.round(vnd).toLocaleString('vi-VN') + ' ₫';
+  return 'NT$' + Math.round(vnd / TWD_TO_VND).toLocaleString();
+}
+function fmtRaw(amount, currency) {
+  if (displayCurrency === 'VND') {
+    var vnd = currency === 'TWD' ? Math.round(amount * TWD_TO_VND) : Math.round(amount);
+    return vnd.toLocaleString('vi-VN') + ' ₫';
+  } else {
+    var twd = currency === 'VND' ? Math.round(amount / TWD_TO_VND) : Math.round(amount);
+    return 'NT$' + twd.toLocaleString();
   }
 }
-
-function setCur(c) {
-  dispCur = c;
-  document.getElementById('cur-vnd').classList.toggle('active', c==='VND');
-  document.getElementById('cur-twd').classList.toggle('active', c==='TWD');
-  updateStats(); renderExpenseList();
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── EXPORT CSV ────────────────────────────────────
+function setCurrency(c) {
+  displayCurrency = c;
+  document.getElementById('cur-vnd').classList.toggle('active', c === 'VND');
+  document.getElementById('cur-twd').classList.toggle('active', c === 'TWD');
+  updateStats();
+  renderExpenseList();
+}
+
+// ── EXPORT ─────────────────────────────────────────────
 function exportCSV() {
   if (!expenses.length) { alert('Chưa có dữ liệu'); return; }
-  var rows = [['Tên chi phí','Ngày','Số tiền','Đơn vị','Loại','Thành viên','Ghi chú']];
+  var rows = [['Tên chi phí','Ngày','Số tiền','Đơn vị','Loại','Thành viên','Ghi chú','Biên lai']];
   expenses.forEach(function(e){
-    rows.push([e.name, e.date, e.amount, e.currency, e.type==='shared'?'Chia đều':'Nhóm riêng', e.members.join('; '), e.note||'']);
+    rows.push([e.name, e.date, e.amount, e.currency,
+      e.type === 'shared' ? 'Chia đều' : 'Nhóm riêng',
+      (e.members||[]).join('; '), e.note||'', e.receipt_url||'']);
   });
-  var csv = rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"'}).join(',')}).join('\n');
-  dl('\uFEFF'+csv, 'chi-phi-du-lich.csv', 'text/csv;charset=utf-8');
+  var csv = rows.map(function(r){
+    return r.map(function(c){return '"' + String(c).replace(/"/g,'""') + '"'}).join(',');
+  }).join('\n');
+  var blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'chi-phi-du-lich.csv';
+  a.click();
 }
 
-// ── EXPORT PDF ────────────────────────────────────
-function exportPDF() {
-  if (!expenses.length) { alert('Chưa có dữ liệu'); return; }
-  var html = '<html><head><meta charset="UTF-8"><title>Chi phí du lịch</title><style>body{font-family:sans-serif;font-size:13px;padding:20px}h1{font-size:18px;margin-bottom:6px}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:6px 10px;border:1px solid #ddd;text-align:left}th{background:#f5f5f5;font-weight:600}tr:nth-child(even){background:#fafafa}.total{margin-top:16px;font-weight:600}</style></head><body>';
-  html += '<h1>Chi phí du lịch nhóm</h1><p>Xuất ngày: '+new Date().toLocaleDateString('vi-VN')+'</p>';
-  html += '<table><thead><tr><th>Tên chi phí</th><th>Ngày</th><th>Số tiền</th><th>Đơn vị</th><th>Loại</th><th>Thành viên</th><th>Ghi chú</th></tr></thead><tbody>';
-  var total = 0;
-  expenses.forEach(function(e){
-    var vnd = e.currency==='TWD'?e.amount*TWD:e.amount;
-    total += vnd;
-    html += '<tr><td>'+esc(e.name)+'</td><td>'+e.date+'</td><td>'+e.amount.toLocaleString()+'</td><td>'+e.currency+'</td><td>'+(e.type==='shared'?'Chia đều':'Nhóm riêng')+'</td><td>'+esc(e.members.join(', '))+'</td><td>'+esc(e.note||'')+'</td></tr>';
-  });
-  html += '</tbody></table><div class="total">Tổng: '+Math.round(total).toLocaleString('vi-VN')+'₫</div>';
-  
-  // Person breakdown
-  if (members.length) {
-    var per = {}; members.forEach(function(m){per[m]=0});
-    expenses.forEach(function(e){
-      var vnd=e.currency==='TWD'?e.amount*TWD:e.amount;
-      if(e.type==='shared'){var s=members.length?vnd/members.length:0;members.forEach(function(m){per[m]+=s});}
-      else{var s2=e.members.length?vnd/e.members.length:0;e.members.forEach(function(m){if(per[m]!==undefined)per[m]+=s2;});}
-    });
-    html += '<h2 style="margin-top:24px;font-size:15px">Chi phí từng người</h2><table><thead><tr><th>Thành viên</th><th>Tổng phải trả</th></tr></thead><tbody>';
-    members.forEach(function(m){html+='<tr><td>'+esc(m)+'</td><td>'+Math.round(per[m]).toLocaleString('vi-VN')+'₫</td></tr>';});
-    html += '</tbody></table>';
-  }
-  html += '</body></html>';
-
-  var w = window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  w.print();
-}
-
-// ── HELPERS ───────────────────────────────────────
-function dl(content, filename, type) {
-  var blob = new Blob([content], {type:type});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a'); a.href=url; a.download=filename; a.click();
-  URL.revokeObjectURL(url);
-}
-
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function persist() {
-  localStorage.setItem('tm', JSON.stringify(members));
-  localStorage.setItem('te', JSON.stringify(expenses));
-}
-
+// ── TAB ────────────────────────────────────────────────
 function switchTab(t) {
-  var tabs = ['members','add','list','stats'];
-  document.querySelectorAll('.tab').forEach(function(el,i){el.classList.toggle('active',tabs[i]===t)});
+  var tabs = ['members','expense','list','stats'];
+  document.querySelectorAll('.tab').forEach(function(el,i){el.classList.toggle('active', tabs[i] === t)});
   document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
-  document.getElementById('tab-'+t).classList.add('active');
-  if (t==='list') renderExpenseList();
-  if (t==='stats') updateStats();
-  if (t==='add') renderExpMemberChips();
+  document.getElementById('tab-' + t).classList.add('active');
+  if (t === 'list') renderExpenseList();
+  if (t === 'stats') updateStats();
 }
 
-function renderAll() { renderMembers(); renderExpMemberChips(); renderExpenseList(); updateStats(); }
+function setNotice(type, msg) {
+  var el = document.getElementById('sb-notice');
+  el.className = 'notice ' + (type === 'ok' ? 'ok' : 'warn');
+  el.innerHTML = msg;
+}
 
-// Init
-document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
-renderAll();
+// ── INIT ───────────────────────────────────────────────
+(function init(){
+  document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+  try {
+    supabase = window.supabase.createClient(SB_URL, SB_KEY);
+    syncFromSupabase();
+  } catch(e) {
+    setNotice('warn', '⚠️ Lỗi kết nối: ' + e.message);
+  }
+})();
 </script>
 </body>
 </html>
