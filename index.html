@@ -190,6 +190,33 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
   </div>
 </div>
 
+<!-- EDIT MODAL -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--surface);border-radius:var(--radius);padding:1.25rem;width:100%;max-width:440px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span style="font-weight:600;font-size:16px">Sửa hóa đơn</span>
+      <button onclick="closeEdit()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">×</button>
+    </div>
+    <input type="hidden" id="edit-id">
+    <label>Tên chi phí</label>
+    <input type="text" id="edit-name" placeholder="Tên chi phí...">
+    <label>Ngày</label>
+    <input type="date" id="edit-date">
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label>Số tiền</label><input type="number" id="edit-amount" min="0"></div>
+      <div style="flex:0 0 100px"><label>Đơn vị</label>
+        <select id="edit-currency"><option value="VND">VNĐ ₫</option><option value="TWD">TWD NT$</option></select>
+      </div>
+    </div>
+    <label>Ghi chú</label>
+    <input type="text" id="edit-note" placeholder="Ghi chú...">
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn" onclick="closeEdit()" style="flex:1">Hủy</button>
+      <button class="btn btn-primary" id="edit-save-btn" onclick="saveEdit()" style="flex:1">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var SB_URL = 'https://nupgaezitixhfhghrfoq.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51cGdhZXppdGl4aGZoZ2hyZm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzEyOTQsImV4cCI6MjA5MDYwNzI5NH0.3bXj7HFgK8FCmmQRJHyk7DSoW-e_2pG5gvZ93bQEK68';
@@ -212,7 +239,43 @@ async function syncFromSupabase() {
   renderMemberCheckboxes();
   renderExpenseList();
   updateStats();
-  setNotice('ok', '✅ Đã kết nối cloud — dữ liệu đồng bộ real-time.');
+  setNotice('ok', '✅ Đã kết nối cloud — tự động cập nhật real-time.');
+  setupRealtime();
+}
+
+function setupRealtime() {
+  sbClient.channel('db-changes')
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'expenses'}, function(payload) {
+      var exists = expenses.find(function(e){return e.id === payload.new.id});
+      if (!exists) { expenses.unshift(payload.new); renderExpenseList(); updateStats(); }
+    })
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'expenses'}, function(payload) {
+      expenses = expenses.map(function(e){return e.id === payload.new.id ? payload.new : e});
+      renderExpenseList(); updateStats();
+    })
+    .on('postgres_changes', {event:'DELETE', schema:'public', table:'expenses'}, function(payload) {
+      expenses = expenses.filter(function(e){return e.id !== payload.old.id});
+      renderExpenseList(); updateStats();
+    })
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'members'}, function(payload) {
+      if (!members.includes(payload.new.name)) { members.push(payload.new.name); renderMembers(); renderMemberCheckboxes(); updateStats(); }
+    })
+    .on('postgres_changes', {event:'DELETE', schema:'public', table:'members'}, function(payload) {
+      members = members.filter(function(m){return m !== payload.old.name});
+      renderMembers(); renderMemberCheckboxes(); updateStats();
+    })
+    .subscribe();
+}
+
+async function sbDeleteExpense(id) {
+  var r = await sbClient.from('expenses').delete().eq('id', id);
+  if (r.error) alert('Lỗi xóa: ' + r.error.message);
+}
+
+async function sbUpdateExpense(id, payload) {
+  var r = await sbClient.from('expenses').update(payload).eq('id', id).select();
+  if (r.error) { alert('Lỗi cập nhật: ' + r.error.message); return null; }
+  return r.data ? r.data[0] : null;
 }
 
 async function sbInsertMember(name) {
@@ -374,8 +437,54 @@ function renderExpenseList() {
       ? '<img src="' + e.receipt_url + '" class="receipt-thumb" onclick="window.open(\'' + e.receipt_url + '\',\'_blank\')" title="Xem biên lai">'
       : '';
     var note = e.note ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + escHtml(e.note) + '</div>' : '';
-    return '<div class="expense-item"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div class="expense-name">' + escHtml(e.name) + '</div><div class="expense-meta">' + e.date + ' · ' + escHtml(mems) + '</div>' + note + '<div>' + badge + '</div>' + receipt + '</div><div class="expense-amount" style="margin-left:12px;white-space:nowrap">' + fmtRaw(e.amount, e.currency) + '</div></div></div>';
+    var eid = e.id;
+    return '<div class="expense-item" id="exp-' + eid + '"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div class="expense-name">' + escHtml(e.name) + '</div><div class="expense-meta">' + e.date + ' · ' + escHtml(mems) + '</div>' + note + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + badge + '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:var(--blue-text);border-color:var(--blue-border)" onclick="openEdit(' + JSON.stringify(eid) + ')">✏️ Sửa</button><button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595" onclick="deleteExpense(' + JSON.stringify(eid) + ')">🗑 Xóa</button></div>' + receipt + '</div><div class="expense-amount" style="margin-left:12px;white-space:nowrap">' + fmtRaw(e.amount, e.currency) + '</div></div></div>';
   }).join('');
+}
+
+// ── DELETE & EDIT ──────────────────────────────────────
+async function deleteExpense(id) {
+  if (!confirm('Xóa hóa đơn này?')) return;
+  expenses = expenses.filter(function(e){return e.id !== id});
+  renderExpenseList(); updateStats();
+  await sbDeleteExpense(id);
+}
+
+function openEdit(id) {
+  var e = expenses.find(function(x){return x.id === id});
+  if (!e) return;
+  // Fill edit modal
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-name').value = e.name;
+  document.getElementById('edit-date').value = e.date;
+  document.getElementById('edit-amount').value = e.amount;
+  document.getElementById('edit-currency').value = e.currency;
+  document.getElementById('edit-note').value = e.note||'';
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').style.display = 'none';
+}
+
+async function saveEdit() {
+  var id = document.getElementById('edit-id').value;
+  var name = document.getElementById('edit-name').value.trim();
+  var date = document.getElementById('edit-date').value;
+  var amount = parseFloat(document.getElementById('edit-amount').value);
+  var currency = document.getElementById('edit-currency').value;
+  var note = document.getElementById('edit-note').value.trim();
+  if (!name || !date || !amount) { alert('Điền đầy đủ thông tin'); return; }
+  var btn = document.getElementById('edit-save-btn');
+  btn.textContent = '⏳...'; btn.disabled = true;
+  var payload = {name:name, date:date, amount:amount, currency:currency, note:note};
+  var updated = await sbUpdateExpense(id, payload);
+  if (updated) {
+    expenses = expenses.map(function(e){return String(e.id)===String(id) ? Object.assign({},e,payload) : e});
+    renderExpenseList(); updateStats();
+  }
+  btn.textContent = '💾 Lưu'; btn.disabled = false;
+  closeEdit();
 }
 
 // ── STATS ──────────────────────────────────────────────
