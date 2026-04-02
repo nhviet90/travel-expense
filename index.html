@@ -474,16 +474,28 @@ async function deleteExpenseById(id) {
   await sbDeleteExpense(id);
 }
 
+function setEditType(t) {
+  document.getElementById('edit-type-shared').classList.toggle('active', t === 'shared');
+  document.getElementById('edit-type-personal').classList.toggle('active', t === 'personal');
+  document.getElementById('edit-personal-members').style.display = t === 'personal' ? 'block' : 'none';
+}
+
 function openEditById(id) {
   var e = expenses.find(function(x){return String(x.id) === String(id)});
   if (!e) return;
-  // Fill edit modal
   document.getElementById('edit-id').value = id;
   document.getElementById('edit-name').value = e.name;
   document.getElementById('edit-date').value = e.date;
   document.getElementById('edit-amount').value = e.amount;
   document.getElementById('edit-currency').value = e.currency;
   document.getElementById('edit-note').value = e.note||'';
+  // Render member checkboxes
+  var currentMembers = e.members || [];
+  document.getElementById('edit-member-checkboxes').innerHTML = members.map(function(m){
+    var sel = currentMembers.indexOf(m) >= 0 ? ' selected' : '';
+    return '<span class="checkbox-chip' + sel + '" onclick="this.classList.toggle('selected')">' + escHtml(m) + '</span>';
+  }).join('');
+  setEditType(e.type || 'shared');
   document.getElementById('edit-modal').style.display = 'flex';
 }
 
