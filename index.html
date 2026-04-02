@@ -493,7 +493,7 @@ function openEditById(id) {
   var currentMembers = e.members || [];
   document.getElementById('edit-member-checkboxes').innerHTML = members.map(function(m){
     var sel = currentMembers.indexOf(m) >= 0 ? ' selected' : '';
-    return '<span class="checkbox-chip' + sel + '" onclick="this.classList.toggle('selected')">' + escHtml(m) + '</span>';
+    return '<span class="checkbox-chip' + sel + '" onclick="this.classList.toggle(\'selected\')">' + escHtml(m) + '</span>';
   }).join('');
   setEditType(e.type || 'shared');
   document.getElementById('edit-modal').style.display = 'flex';
