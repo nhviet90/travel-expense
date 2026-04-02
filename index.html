@@ -97,7 +97,7 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
   <div class="tabs">
     <button class="tab active" onclick="switchTab('stats')">Thống kê</button>
     <button class="tab" onclick="switchTab('expense')">Thêm chi phí</button>
-    <button class="tab" onclick="switchTab('list')">Danh sách</button>
+    <button class="tab" onclick="switchTab('list')">​Chi tiết</button>
     <button class="tab" onclick="switchTab('members')">Thành viên</button>
   </div>
 
@@ -207,6 +207,15 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
       <div style="flex:0 0 100px"><label>Đơn vị</label>
         <select id="edit-currency"><option value="VND">VNĐ ₫</option><option value="TWD">TWD NT$</option></select>
       </div>
+    </div>
+    <label>Loại chi phí</label>
+    <div class="currency-toggle" style="margin-bottom:10px">
+      <button id="edit-type-shared" onclick="setEditType('shared')">&#127374; Chia đều tất cả</button>
+      <button id="edit-type-personal" onclick="setEditType('personal')">&#127968; Nhóm riêng</button>
+    </div>
+    <div id="edit-personal-members" style="display:none">
+      <label>Áp dụng cho thành viên</label>
+      <div id="edit-member-checkboxes" class="checkbox-group"></div>
     </div>
     <label>Ghi chú</label>
     <input type="text" id="edit-note" placeholder="Ghi chú...">
@@ -492,7 +501,16 @@ async function saveEdit() {
   if (!name || !date || !amount) { alert('Điền đầy đủ thông tin'); return; }
   var btn = document.getElementById('edit-save-btn');
   btn.textContent = '⏳...'; btn.disabled = true;
-  var payload = {name:name, date:date, amount:amount, currency:currency, note:note};
+  var editType = document.getElementById('edit-type-personal').classList.contains('active') ? 'personal' : 'shared';
+  var editMembers = members.slice();
+  if (editType === 'personal') {
+    editMembers = [];
+    document.querySelectorAll('#edit-member-checkboxes .selected').forEach(function(el){
+      editMembers.push(el.textContent);
+    });
+    if (!editMembers.length) { alert('Chọn ít nhất 1 thành viên'); btn.textContent = '💾 Lưu'; btn.disabled = false; return; }
+  }
+  var payload = {name:name, date:date, amount:amount, currency:currency, note:note, type:editType, members:editMembers};
   var updated = await sbUpdateExpense(id, payload);
   if (updated) {
     expenses = expenses.map(function(e){return String(e.id)===String(id) ? Object.assign({},e,payload) : e});
