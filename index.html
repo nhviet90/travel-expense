@@ -96,8 +96,9 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('stats')">Thống kê</button>
-    <button class="tab" onclick="switchTab('expense')">Thêm chi phí</button>
-    <button class="tab" onclick="switchTab('list')">​Chi tiết</button>
+    <button class="tab" onclick="switchTab('expense')">Thêm CP</button>
+    <button class="tab" onclick="switchTab('list')">Chi tiết</button>
+    <button class="tab" onclick="switchTab('payments')">Nhận tiền</button>
     <button class="tab" onclick="switchTab('members')">Thành viên</button>
   </div>
 
@@ -169,6 +170,39 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
     </div>
   </div>
 
+  <!-- TAB: NHẬN TIỀN -->
+  <div id="tab-payments" class="tab-content">
+    <div class="card">
+      <div class="section-title">Ghi nhận tiền nhận được</div>
+      <label>Thành viên gửi tiền *</label>
+      <select id="pay-member"><option value="">-- Chọn thành viên --</option></select>
+      <div class="row">
+        <div>
+          <label>Số tiền *</label>
+          <input type="number" id="pay-amount" placeholder="0" min="0">
+        </div>
+        <div>
+          <label>Đơn vị</label>
+          <select id="pay-currency">
+            <option value="VND">VNĐ ₫</option>
+            <option value="TWD">TWD NT$</option>
+          </select>
+        </div>
+      </div>
+      <label>Ngày nhận *</label>
+      <input type="date" id="pay-date">
+      <label>Ghi chú</label>
+      <input type="text" id="pay-note" placeholder="VD: chuyển khoản, tiền mặt...">
+      <button class="btn btn-primary" id="pay-save-btn" onclick="addPayment()">💾 Lưu khoản nhận</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;margin-top:0.25rem">
+      <span style="font-size:13px;color:var(--text2)" id="payment-count">0 lần nhận</span>
+    </div>
+    <div class="card" id="payment-list">
+      <div class="empty-state">Chưa ghi nhận lần nào.<br>Thêm bên trên.</div>
+    </div>
+  </div>
+
   <!-- TAB: THỐNG KÊ -->
   <div id="tab-stats" class="tab-content active">
     <div class="currency-toggle">
@@ -186,6 +220,10 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
     <div class="card" style="margin-top:0.75rem">
       <div class="section-title">Tổng theo loại</div>
       <div id="type-breakdown"></div>
+    </div>
+    <div class="card" style="margin-top:0.75rem">
+      <div class="section-title">Đối soát thanh toán</div>
+      <div id="balance-breakdown"><div class="empty-state" style="padding:1rem">Thêm thành viên và chi phí để xem</div></div>
     </div>
   </div>
 </div>
@@ -232,6 +270,7 @@ var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 
 var members = [];
 var expenses = [];
+var payments = [];
 var expenseType = 'shared';
 var displayCurrency = 'VND';
 var TWD_TO_VND = 800;
@@ -244,9 +283,13 @@ async function syncFromSupabase() {
   if (r1.data) members = r1.data.map(function(m){return m.name});
   var r2 = await sbClient.from('expenses').select('*').order('created_at', {ascending:false});
   if (r2.data) expenses = r2.data;
+  var r3 = await sbClient.from('payments').select('*').order('created_at', {ascending:false});
+  if (r3.data) payments = r3.data;
   renderMembers();
   renderMemberCheckboxes();
+  renderPaymentMemberSelect();
   renderExpenseList();
+  renderPayments();
   updateStats();
   setNotice('ok', '✅ Đã kết nối cloud — tự động cập nhật real-time.');
   setupRealtime();
@@ -267,17 +310,36 @@ function setupRealtime() {
       renderExpenseList(); updateStats();
     })
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'members'}, function(payload) {
-      if (!members.includes(payload.new.name)) { members.push(payload.new.name); renderMembers(); renderMemberCheckboxes(); updateStats(); }
+      if (!members.includes(payload.new.name)) { members.push(payload.new.name); renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect(); updateStats(); }
     })
     .on('postgres_changes', {event:'DELETE', schema:'public', table:'members'}, function(payload) {
       members = members.filter(function(m){return m !== payload.old.name});
-      renderMembers(); renderMemberCheckboxes(); updateStats();
+      renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect(); updateStats();
+    })
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'payments'}, function(payload) {
+      var exists = payments.find(function(p){return p.id === payload.new.id});
+      if (!exists) { payments.unshift(payload.new); renderPayments(); updateStats(); }
+    })
+    .on('postgres_changes', {event:'DELETE', schema:'public', table:'payments'}, function(payload) {
+      payments = payments.filter(function(p){return p.id !== payload.old.id});
+      renderPayments(); updateStats();
     })
     .subscribe();
 }
 
 async function sbDeleteExpense(id) {
   var r = await sbClient.from('expenses').delete().eq('id', id);
+  if (r.error) alert('Lỗi xóa: ' + r.error.message);
+}
+
+async function sbInsertPayment(p) {
+  var r = await sbClient.from('payments').insert(p).select();
+  if (r.error) { alert('Lỗi lưu khoản nhận: ' + r.error.message); return null; }
+  return r.data ? r.data[0] : null;
+}
+
+async function sbDeletePayment(id) {
+  var r = await sbClient.from('payments').delete().eq('id', id);
   if (r.error) alert('Lỗi xóa: ' + r.error.message);
 }
 
@@ -342,11 +404,23 @@ function renderMembers() {
   document.getElementById('total-members').textContent = members.length;
   if (!members.length) {
     el.innerHTML = '<span style="font-size:13px;color:var(--text2)">Chưa có thành viên nào</span>';
+    renderPaymentMemberSelect();
     return;
   }
   el.innerHTML = members.map(function(m){
     return '<span class="member-chip"><span>' + escHtml(m) + '</span><button onclick="removeMember(\'' + escHtml(m) + '\')">×</button></span>';
   }).join('');
+  renderPaymentMemberSelect();
+}
+
+function renderPaymentMemberSelect() {
+  var el = document.getElementById('pay-member');
+  if (!el) return;
+  var current = el.value;
+  el.innerHTML = '<option value="">-- Chọn thành viên --</option>' +
+    members.map(function(m){
+      return '<option value="' + escHtml(m) + '"' + (m === current ? ' selected' : '') + '>' + escHtml(m) + '</option>';
+    }).join('');
 }
 
 function renderMemberCheckboxes() {
@@ -532,6 +606,68 @@ async function saveEdit() {
   closeEdit();
 }
 
+// ── PAYMENTS ───────────────────────────────────────────
+async function addPayment() {
+  var member = document.getElementById('pay-member').value;
+  var amount = parseFloat(document.getElementById('pay-amount').value);
+  var currency = document.getElementById('pay-currency').value;
+  var date = document.getElementById('pay-date').value;
+  var note = document.getElementById('pay-note').value.trim();
+
+  if (!member) { alert('Chọn thành viên'); return; }
+  if (!amount || isNaN(amount)) { alert('Nhập số tiền'); return; }
+  if (!date) { alert('Chọn ngày'); return; }
+
+  var btn = document.getElementById('pay-save-btn');
+  btn.textContent = '⏳ Đang lưu...'; btn.disabled = true;
+
+  var p = { member_name: member, amount: amount, currency: currency, date: date, note: note };
+  var saved = await sbInsertPayment(p);
+  if (saved) {
+    payments.unshift(saved);
+  } else {
+    payments.unshift(Object.assign({id: Date.now()}, p));
+  }
+
+  document.getElementById('pay-amount').value = '';
+  document.getElementById('pay-note').value = '';
+  btn.textContent = '💾 Lưu khoản nhận'; btn.disabled = false;
+
+  renderPayments();
+  updateStats();
+}
+
+function renderPayments() {
+  var el = document.getElementById('payment-list');
+  var countEl = document.getElementById('payment-count');
+  if (countEl) countEl.textContent = payments.length + ' lần nhận';
+  if (!payments.length) {
+    el.innerHTML = '<div class="empty-state">Chưa ghi nhận lần nào.<br>Thêm bên trên.</div>';
+    return;
+  }
+  el.innerHTML = payments.map(function(p) {
+    var pid = String(p.id);
+    var noteHtml = p.note ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + escHtml(p.note) + '</div>' : '';
+    return '<div class="expense-item">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+      '<div style="flex:1">' +
+      '<div class="expense-name">👤 ' + escHtml(p.member_name) + '</div>' +
+      '<div class="expense-meta">' + p.date + '</div>' +
+      noteHtml +
+      '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595;margin-top:4px" onclick="deletePaymentById(\'' + pid + '\')">🗑 Xóa</button>' +
+      '</div>' +
+      '<div class="expense-amount" style="margin-left:12px;white-space:nowrap;color:var(--green-text)">' + fmtRaw(p.amount, p.currency) + '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+async function deletePaymentById(id) {
+  if (!confirm('Xóa khoản nhận tiền này?')) return;
+  payments = payments.filter(function(p){ return String(p.id) !== String(id); });
+  renderPayments(); updateStats();
+  await sbDeletePayment(id);
+}
+
 // ── STATS ──────────────────────────────────────────────
 function updateStats() {
   var totalVND = 0, sharedVND = 0, personalVND = 0;
@@ -634,6 +770,75 @@ function updateStats() {
   }
   if (!tbHTML) tbHTML = '<div class="empty-state" style="padding:1rem">Chưa có chi phí</div>';
   document.getElementById('type-breakdown').innerHTML = tbHTML;
+
+  // ── Đối soát thanh toán ────────────────────────────
+  var bb = document.getElementById('balance-breakdown');
+  if (!members.length) {
+    bb.innerHTML = '<div class="empty-state" style="padding:1rem">Thêm thành viên để xem</div>';
+    return;
+  }
+
+  // Tổng chi phí mỗi người (VNĐ, TWD riêng)
+  var needVND = {}, needTWD = {};
+  members.forEach(function(m){ needVND[m] = 0; needTWD[m] = 0; });
+  expenses.forEach(function(e){
+    var amt = e.amount;
+    var isTWD = e.currency === 'TWD';
+    if (e.type === 'shared') {
+      var share = members.length ? amt / members.length : 0;
+      members.forEach(function(m){
+        if (isTWD) needTWD[m] += share; else needVND[m] += share;
+      });
+    } else {
+      var mems3 = e.members || [];
+      var share3 = mems3.length ? amt / mems3.length : 0;
+      mems3.forEach(function(m){
+        if (needVND[m] !== undefined) {
+          if (isTWD) needTWD[m] += share3; else needVND[m] += share3;
+        }
+      });
+    }
+  });
+
+  // Tổng đã gửi mỗi người (VNĐ, TWD riêng)
+  var paidVND = {}, paidTWD = {};
+  members.forEach(function(m){ paidVND[m] = 0; paidTWD[m] = 0; });
+  payments.forEach(function(p){
+    if (paidVND[p.member_name] !== undefined) {
+      if (p.currency === 'TWD') paidTWD[p.member_name] += p.amount;
+      else paidVND[p.member_name] += p.amount;
+    }
+  });
+
+  bb.innerHTML = members.map(function(m){
+    var nv = Math.round(needVND[m]||0), nt = Math.round(needTWD[m]||0);
+    var pv = Math.round(paidVND[m]||0), pt = Math.round(paidTWD[m]||0);
+    var remVND = nv - pv, remTWD = nt - pt;
+    var initials = m.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();
+
+    function amtLine(vnd, twd, colorClass) {
+      var parts = [];
+      if (vnd !== 0) parts.push('<span style="' + colorClass + '">' + Math.abs(vnd).toLocaleString('vi-VN') + ' ₫</span>');
+      if (twd !== 0) parts.push('<span style="' + colorClass + '">NT$' + Math.abs(twd).toLocaleString() + '</span>');
+      return parts.length ? parts.join(' + ') : '<span style="color:var(--text3)">0</span>';
+    }
+
+    var remSign = (remVND > 0 || remTWD > 0) ? 'còn thiếu' : (remVND < 0 || remTWD < 0) ? 'dư' : 'đủ';
+    var remColor = remSign === 'còn thiếu' ? 'color:#a32d2d;font-weight:600' : remSign === 'dư' ? 'color:var(--green-text);font-weight:600' : 'color:var(--text3)';
+
+    return '<div style="border-bottom:0.5px solid var(--border);padding:10px 0">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+      '<div class="avatar">' + initials + '</div>' +
+      '<span style="font-size:14px;font-weight:500">' + escHtml(m) + '</span>' +
+      '<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg);' + remColor + '">' + remSign + '</span>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:11px">' +
+      '<div style="background:var(--bg);border-radius:6px;padding:6px 8px"><div style="color:var(--text3);margin-bottom:2px">Cần trả</div>' + amtLine(nv, nt, 'color:var(--text);font-weight:600') + '</div>' +
+      '<div style="background:var(--green-bg);border-radius:6px;padding:6px 8px"><div style="color:var(--green-text);margin-bottom:2px">Đã gửi</div>' + amtLine(pv, pt, 'color:var(--green-text);font-weight:600') + '</div>' +
+      '<div style="background:' + (remSign==='còn thiếu'?'#fcebeb':remSign==='dư'?'var(--blue-bg)':'var(--bg)') + ';border-radius:6px;padding:6px 8px"><div style="' + remColor + ';margin-bottom:2px">Còn lại</div>' + amtLine(Math.abs(remVND), Math.abs(remTWD), remColor) + '</div>' +
+      '</div></div>';
+  }).join('') + '<div style="height:4px"></div>';
+
 }
 
 // ── FORMAT ─────────────────────────────────────────────
@@ -683,12 +888,13 @@ function exportCSV() {
 
 // ── TAB ────────────────────────────────────────────────
 function switchTab(t) {
-  var tabs = ['stats','expense','list','members'];
+  var tabs = ['stats','expense','list','payments','members'];
   document.querySelectorAll('.tab').forEach(function(el,i){el.classList.toggle('active', tabs[i] === t)});
   document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
   document.getElementById('tab-' + t).classList.add('active');
   if (t === 'list') renderExpenseList();
   if (t === 'stats') updateStats();
+  if (t === 'payments') renderPayments();
 }
 
 function setNotice(type, msg) {
@@ -699,7 +905,9 @@ function setNotice(type, msg) {
 
 // ── INIT ───────────────────────────────────────────────
 function init() {
-  document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('exp-date').value = today;
+  document.getElementById('pay-date').value = today;
   updateStats();
 }
 
