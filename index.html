@@ -20,6 +20,7 @@ window.dispatchEvent(new Event('sb-ready'));
   --green-bg:#e1f5ee;--green-text:#0f6e56;--green-border:#9fe1cb;
   --blue-bg:#e6f1fb;--blue-text:#185fa5;--blue-border:#b5d4f4;
   --amber-bg:#faeeda;--amber-text:#633806;--amber-border:#fac775;
+  --purple-bg:#f0ecfb;--purple-text:#5b21b6;
   --radius:10px;--radius-sm:7px;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
@@ -30,8 +31,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .notice{border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;font-size:12px;line-height:1.5}
 .notice.warn{background:var(--amber-bg);border:0.5px solid var(--amber-border);color:var(--amber-text)}
 .notice.ok{background:var(--green-bg);border:0.5px solid var(--green-border);color:var(--green-text)}
-.tabs{display:flex;gap:4px;background:#eae8e1;border-radius:var(--radius);padding:4px;margin-bottom:1rem}
-.tab{flex:1;padding:8px 4px;font-size:12px;font-weight:500;border:none;background:transparent;border-radius:7px;cursor:pointer;color:var(--text2);transition:all 0.15s}
+.tabs{display:flex;gap:3px;background:#eae8e1;border-radius:var(--radius);padding:4px;margin-bottom:1rem}
+.tab{flex:1;padding:7px 2px;font-size:11px;font-weight:500;border:none;background:transparent;border-radius:7px;cursor:pointer;color:var(--text2);transition:all 0.15s}
 .tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
 .card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:0.75rem}
 .section-title{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.8px}
@@ -49,10 +50,11 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
 .btn-primary{background:var(--text);color:var(--surface);border-color:transparent}
 .btn-primary:hover{opacity:0.85;background:var(--text)}
 .btn-sm{width:auto;padding:6px 12px;font-size:12px}
-.btn-danger{border-color:#f09595;color:#a32d2d}
-.btn-danger:hover{background:#fcebeb}
 .member-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:0.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:13px;margin:3px}
 .member-chip button{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:0}
+.family-tag{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500}
+.family-thao{background:#fce7f3;color:#9d174d}
+.family-yen{background:#dbeafe;color:#1e40af}
 .expense-item{border-bottom:0.5px solid var(--border);padding:12px 0}
 .expense-item:last-child{border-bottom:none}
 .expense-name{font-size:14px;font-weight:500}
@@ -61,6 +63,16 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
 .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin-top:4px}
 .badge-shared{background:var(--green-bg);color:var(--green-text)}
 .badge-personal{background:var(--blue-bg);color:var(--blue-text)}
+.badge-cat{background:var(--amber-bg);color:var(--amber-text)}
+/* Person cards grid */
+.person-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.person-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.person-card-name{font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person-card-family{font-size:10px;color:var(--text3);margin-bottom:8px}
+.person-card-amt{font-size:18px;font-weight:700;letter-spacing:-0.5px;line-height:1.2}
+.person-card-amt-sub{font-size:12px;color:var(--blue-text);font-weight:600;margin-top:2px}
+.person-card-zero{font-size:14px;color:var(--text3)}
+/* Stat top cards */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0.75rem}
 .stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:0.875rem 1rem}
 .stat-label{font-size:12px;color:var(--text2);margin-bottom:4px}
@@ -105,12 +117,17 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
   <!-- TAB: THÀNH VIÊN -->
   <div id="tab-members" class="tab-content">
     <div class="card">
-      <div class="section-title">Thành viên trong nhóm</div>
-      <div class="row" style="align-items:flex-start">
-        <input type="text" id="member-input" placeholder="Nhập tên..." style="margin:0" onkeydown="if(event.key==='Enter')addMember()">
-        <button class="btn btn-sm btn-primary" onclick="addMember()" style="margin-top:0;white-space:nowrap">+ Thêm</button>
-      </div>
-      <div id="member-chips" style="margin-top:10px"></div>
+      <div class="section-title">Thêm thành viên</div>
+      <label>Tên *</label>
+      <input type="text" id="member-input" placeholder="Nhập tên..." onkeydown="if(event.key==='Enter')addMember()">
+      <label>Gia đình *</label>
+      <select id="member-family">
+        <option value="">-- Chọn gia đình --</option>
+        <option value="nhà bà Thảo">🏠 Nhà bà Thảo</option>
+        <option value="nhà bà Yến">🏡 Nhà bà Yến</option>
+      </select>
+      <button class="btn btn-primary" onclick="addMember()">+ Thêm thành viên</button>
+      <div id="member-chips" style="margin-top:14px"></div>
     </div>
   </div>
 
@@ -125,6 +142,16 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
 
       <label>Tên chi phí *</label>
       <input type="text" id="exp-name" placeholder="VD: Bữa tối nhà hàng, Khách sạn A...">
+
+      <label>Phân loại *</label>
+      <select id="exp-category">
+        <option value="">-- Chọn phân loại --</option>
+        <option value="Vé MB">✈️ Vé MB</option>
+        <option value="Di chuyển">🚌 Di chuyển</option>
+        <option value="Ăn uống">🍜 Ăn uống</option>
+        <option value="Vui chơi">🎡 Vui chơi</option>
+        <option value="Mua quà">🎁 Mua quà</option>
+      </select>
 
       <label>Ngày phát sinh *</label>
       <input type="date" id="exp-date">
@@ -166,7 +193,7 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
       <button class="btn btn-sm" onclick="exportCSV()">📊 Xuất CSV</button>
     </div>
     <div class="card" id="expense-list">
-      <div class="empty-state">Chưa có chi phí nào.<br>Thêm từ tab "Thêm chi phí"</div>
+      <div class="empty-state">Chưa có chi phí nào.<br>Thêm từ tab "Thêm CP"</div>
     </div>
   </div>
 
@@ -205,25 +232,73 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
 
   <!-- TAB: THỐNG KÊ -->
   <div id="tab-stats" class="tab-content active">
-    <div class="currency-toggle">
-      <button class="active" id="cur-vnd" onclick="setCurrency('VND')">VNĐ ₫</button>
-      <button id="cur-twd" onclick="setCurrency('TWD')">TWD NT$</button>
-    </div>
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-label">Tổng chi phí</div><div class="stat-value" id="total-all">0</div></div>
+      <div class="stat-card"><div class="stat-label">Tổng chi phí</div><div class="stat-value" id="total-all" style="font-size:16px">0</div></div>
       <div class="stat-card"><div class="stat-label">Số thành viên</div><div class="stat-value" id="total-members">0</div></div>
     </div>
     <div class="card">
       <div class="section-title">Chi phí từng người</div>
-      <div id="person-breakdown"><div class="empty-state">Thêm thành viên và chi phí để xem</div></div>
+      <div id="person-breakdown" class="person-grid">
+        <div class="empty-state" style="grid-column:1/-1">Thêm thành viên và chi phí để xem</div>
+      </div>
     </div>
     <div class="card" style="margin-top:0.75rem">
-      <div class="section-title">Tổng theo loại</div>
+      <div class="section-title">Theo phân loại</div>
+      <div id="cat-breakdown"></div>
+    </div>
+    <div class="card" style="margin-top:0.75rem">
+      <div class="section-title">Tổng theo loại chia</div>
       <div id="type-breakdown"></div>
     </div>
-    <div class="card" style="margin-top:0.75rem">
-      <div class="section-title">Đối soát thanh toán</div>
-      <div id="balance-breakdown"><div class="empty-state" style="padding:1rem">Thêm thành viên và chi phí để xem</div></div>
+  </div>
+</div>
+
+<!-- MEMBER EDIT MODAL -->
+<div id="member-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--surface);border-radius:var(--radius);padding:1.25rem;width:100%;max-width:380px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span style="font-weight:600;font-size:16px">Sửa thành viên</span>
+      <button onclick="closeMemberEdit()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">×</button>
+    </div>
+    <input type="hidden" id="medit-id">
+    <label>Tên</label>
+    <input type="text" id="medit-name" placeholder="Tên thành viên...">
+    <label>Gia đình</label>
+    <select id="medit-family">
+      <option value="">-- Chọn gia đình --</option>
+      <option value="nhà bà Thảo">🏠 Nhà bà Thảo</option>
+      <option value="nhà bà Yến">🏡 Nhà bà Yến</option>
+    </select>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn" onclick="closeMemberEdit()" style="flex:1">Hủy</button>
+      <button class="btn btn-primary" id="medit-save-btn" onclick="saveMemberEdit()" style="flex:1">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT EDIT MODAL -->
+<div id="payment-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--surface);border-radius:var(--radius);padding:1.25rem;width:100%;max-width:380px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span style="font-weight:600;font-size:16px">Sửa khoản nhận tiền</span>
+      <button onclick="closePaymentEdit()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">×</button>
+    </div>
+    <input type="hidden" id="pedit-id">
+    <label>Thành viên</label>
+    <select id="pedit-member"></select>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label>Số tiền</label><input type="number" id="pedit-amount" min="0"></div>
+      <div style="flex:0 0 110px"><label>Đơn vị</label>
+        <select id="pedit-currency"><option value="VND">VNĐ ₫</option><option value="TWD">TWD NT$</option></select>
+      </div>
+    </div>
+    <label>Ngày nhận</label>
+    <input type="date" id="pedit-date">
+    <label>Ghi chú</label>
+    <input type="text" id="pedit-note" placeholder="Ghi chú...">
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn" onclick="closePaymentEdit()" style="flex:1">Hủy</button>
+      <button class="btn btn-primary" id="pedit-save-btn" onclick="savePaymentEdit()" style="flex:1">💾 Lưu</button>
     </div>
   </div>
 </div>
@@ -238,6 +313,15 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
     <input type="hidden" id="edit-id">
     <label>Tên chi phí</label>
     <input type="text" id="edit-name" placeholder="Tên chi phí...">
+    <label>Phân loại</label>
+    <select id="edit-category">
+      <option value="">-- Chọn phân loại --</option>
+      <option value="Vé MB">✈️ Vé MB</option>
+      <option value="Di chuyển">🚌 Di chuyển</option>
+      <option value="Ăn uống">🍜 Ăn uống</option>
+      <option value="Vui chơi">🎡 Vui chơi</option>
+      <option value="Mua quà">🎁 Mua quà</option>
+    </select>
     <label>Ngày</label>
     <input type="date" id="edit-date">
     <div style="display:flex;gap:8px">
@@ -268,7 +352,7 @@ input[type=file]{width:100%;padding:6px;border:0.5px dashed var(--border);border
 var SB_URL = 'https://nupgaezitixhfhghrfoq.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51cGdhZXppdGl4aGZoZ2hyZm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzEyOTQsImV4cCI6MjA5MDYwNzI5NH0.3bXj7HFgK8FCmmQRJHyk7DSoW-e_2pG5gvZ93bQEK68';
 
-var members = [];
+var memberObjects = []; // [{name, family}]
 var expenses = [];
 var payments = [];
 var expenseType = 'shared';
@@ -276,21 +360,25 @@ var displayCurrency = 'VND';
 var TWD_TO_VND = 800;
 var sbClient = null;
 var BUCKET = 'receipts';
+var CATEGORIES = ['Vé MB','Di chuyển','Ăn uống','Vui chơi','Mua quà'];
+var CAT_ICONS = {'Vé MB':'✈️','Di chuyển':'🚌','Ăn uống':'🍜','Vui chơi':'🎡','Mua quà':'🎁'};
+
+function memberNames() { return memberObjects.map(function(m){return m.name}); }
+function memberFamily(name) {
+  var m = memberObjects.find(function(x){return x.name===name});
+  return m ? m.family : '';
+}
 
 // ── SUPABASE ───────────────────────────────────────────
 async function syncFromSupabase() {
   var r1 = await sbClient.from('members').select('*').order('created_at');
-  if (r1.data) members = r1.data.map(function(m){return m.name});
+  if (r1.data) memberObjects = r1.data.map(function(m){return {id:m.id, name:m.name, family:m.family||''}});
   var r2 = await sbClient.from('expenses').select('*').order('created_at', {ascending:false});
   if (r2.data) expenses = r2.data;
   var r3 = await sbClient.from('payments').select('*').order('created_at', {ascending:false});
   if (r3.data) payments = r3.data;
-  renderMembers();
-  renderMemberCheckboxes();
-  renderPaymentMemberSelect();
-  renderExpenseList();
-  renderPayments();
-  updateStats();
+  renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect();
+  renderExpenseList(); renderPayments(); updateStats();
   setNotice('ok', '✅ Đã kết nối cloud — tự động cập nhật real-time.');
   setupRealtime();
 }
@@ -298,119 +386,171 @@ async function syncFromSupabase() {
 function setupRealtime() {
   sbClient.channel('db-changes')
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'expenses'}, function(payload) {
-      var exists = expenses.find(function(e){return e.id === payload.new.id});
-      if (!exists) { expenses.unshift(payload.new); renderExpenseList(); updateStats(); }
+      if (!expenses.find(function(e){return e.id===payload.new.id})) { expenses.unshift(payload.new); renderExpenseList(); updateStats(); }
     })
     .on('postgres_changes', {event:'UPDATE', schema:'public', table:'expenses'}, function(payload) {
-      expenses = expenses.map(function(e){return e.id === payload.new.id ? payload.new : e});
+      expenses = expenses.map(function(e){return e.id===payload.new.id ? payload.new : e});
       renderExpenseList(); updateStats();
     })
     .on('postgres_changes', {event:'DELETE', schema:'public', table:'expenses'}, function(payload) {
-      expenses = expenses.filter(function(e){return e.id !== payload.old.id});
+      expenses = expenses.filter(function(e){return e.id!==payload.old.id});
       renderExpenseList(); updateStats();
     })
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'members'}, function(payload) {
-      if (!members.includes(payload.new.name)) { members.push(payload.new.name); renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect(); updateStats(); }
+      if (!memberNames().includes(payload.new.name)) {
+        memberObjects.push({id:payload.new.id, name:payload.new.name, family:payload.new.family||''});
+        renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect(); updateStats();
+      }
     })
     .on('postgres_changes', {event:'DELETE', schema:'public', table:'members'}, function(payload) {
-      members = members.filter(function(m){return m !== payload.old.name});
+      memberObjects = memberObjects.filter(function(m){return m.name!==payload.old.name});
       renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect(); updateStats();
     })
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'payments'}, function(payload) {
-      var exists = payments.find(function(p){return p.id === payload.new.id});
-      if (!exists) { payments.unshift(payload.new); renderPayments(); updateStats(); }
+      if (!payments.find(function(p){return p.id===payload.new.id})) { payments.unshift(payload.new); renderPayments(); updateStats(); }
     })
     .on('postgres_changes', {event:'DELETE', schema:'public', table:'payments'}, function(payload) {
-      payments = payments.filter(function(p){return p.id !== payload.old.id});
+      payments = payments.filter(function(p){return p.id!==payload.old.id});
       renderPayments(); updateStats();
     })
     .subscribe();
 }
 
-async function sbDeleteExpense(id) {
-  var r = await sbClient.from('expenses').delete().eq('id', id);
-  if (r.error) alert('Lỗi xóa: ' + r.error.message);
-}
-
-async function sbInsertPayment(p) {
-  var r = await sbClient.from('payments').insert(p).select();
-  if (r.error) { alert('Lỗi lưu khoản nhận: ' + r.error.message); return null; }
+async function sbInsertMember(name, family) {
+  var r = await sbClient.from('members').insert({name:name, family:family}).select();
+  if (r.error) { alert('Lỗi lưu thành viên: ' + r.error.message); return null; }
   return r.data ? r.data[0] : null;
 }
-
-async function sbDeletePayment(id) {
-  var r = await sbClient.from('payments').delete().eq('id', id);
-  if (r.error) alert('Lỗi xóa: ' + r.error.message);
-}
-
-async function sbUpdateExpense(id, payload) {
-  var r = await sbClient.from('expenses').update(payload).eq('id', id).select();
-  if (r.error) { alert('Lỗi cập nhật: ' + r.error.message); return null; }
+async function sbUpdateMember(id, name, family) {
+  var r = await sbClient.from('members').update({name:name, family:family}).eq('id', id).select();
+  if (r.error) { alert('Lỗi cập nhật thành viên: ' + r.error.message); return null; }
   return r.data ? r.data[0] : null;
 }
-
-async function sbInsertMember(name) {
-  var r = await sbClient.from('members').insert({name:name});
-  if (r.error) alert('Lỗi lưu thành viên: ' + r.error.message);
-}
-
-async function sbDeleteMember(name) {
-  await sbClient.from('members').delete().eq('name', name);
-}
+async function sbDeleteMember(name) { await sbClient.from('members').delete().eq('name', name); }
 
 async function sbInsertExpense(exp) {
   var payload = {
-    name: exp.name, date: exp.date, amount: exp.amount,
-    currency: exp.currency, type: exp.type,
-    members: exp.members, note: exp.note||''
+    name:exp.name, date:exp.date, amount:exp.amount,
+    currency:exp.currency, type:exp.type,
+    members:exp.members, note:exp.note||'', category:exp.category||''
   };
   if (exp.receiptFile) {
     var path = 'receipt-' + Date.now() + '.jpg';
-    var up = await sbClient.storage.from(BUCKET).upload(path, exp.receiptFile, {contentType: exp.receiptFile.type || 'image/jpeg'});
-    if (!up.error) {
-      var pub = sbClient.storage.from(BUCKET).getPublicUrl(path);
-      payload.receipt_url = pub.data.publicUrl;
-    }
+    var up = await sbClient.storage.from(BUCKET).upload(path, exp.receiptFile, {contentType: exp.receiptFile.type||'image/jpeg'});
+    if (!up.error) { var pub = sbClient.storage.from(BUCKET).getPublicUrl(path); payload.receipt_url = pub.data.publicUrl; }
   }
   var r = await sbClient.from('expenses').insert(payload).select();
   if (r.error) { alert('Lỗi lưu chi phí: ' + r.error.message); return null; }
   return r.data ? r.data[0] : null;
 }
+async function sbUpdateExpense(id, payload) {
+  var r = await sbClient.from('expenses').update(payload).eq('id', id).select();
+  if (r.error) { alert('Lỗi cập nhật: ' + r.error.message); return null; }
+  return r.data ? r.data[0] : null;
+}
+async function sbDeleteExpense(id) {
+  var r = await sbClient.from('expenses').delete().eq('id', id);
+  if (r.error) alert('Lỗi xóa: ' + r.error.message);
+}
+async function sbInsertPayment(p) {
+  var r = await sbClient.from('payments').insert(p).select();
+  if (r.error) { alert('Lỗi lưu khoản nhận: ' + r.error.message); return null; }
+  return r.data ? r.data[0] : null;
+}
+async function sbUpdatePayment(id, payload) {
+  var r = await sbClient.from('payments').update(payload).eq('id', id).select();
+  if (r.error) { alert('Lỗi cập nhật: ' + r.error.message); return null; }
+  return r.data ? r.data[0] : null;
+}
+async function sbDeletePayment(id) {
+  var r = await sbClient.from('payments').delete().eq('id', id);
+  if (r.error) alert('Lỗi xóa: ' + r.error.message);
+}
 
 // ── MEMBERS ────────────────────────────────────────────
 async function addMember() {
-  var v = document.getElementById('member-input').value.trim();
-  if (!v) { alert('Nhập tên thành viên'); return; }
-  if (members.includes(v)) { alert('Tên này đã tồn tại'); return; }
-  members.push(v);
-  renderMembers();
-  renderMemberCheckboxes();
-  updateStats();
+  var name = document.getElementById('member-input').value.trim();
+  var family = document.getElementById('member-family').value;
+  if (!name) { alert('Nhập tên thành viên'); return; }
+  if (!family) { alert('Chọn gia đình'); return; }
+  if (memberNames().includes(name)) { alert('Tên này đã tồn tại'); return; }
+  var saved = await sbInsertMember(name, family);
+  var id = saved ? saved.id : Date.now();
+  memberObjects.push({id:id, name:name, family:family});
+  renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect(); updateStats();
   document.getElementById('member-input').value = '';
-  await sbInsertMember(v);
+  document.getElementById('member-family').value = '';
 }
 
-async function removeMember(m) {
-  if (!confirm('Xoá thành viên "' + m + '"?')) return;
-  members = members.filter(function(x){return x !== m});
-  renderMembers();
-  renderMemberCheckboxes();
-  updateStats();
-  await sbDeleteMember(m);
+async function removeMember(name) {
+  if (!confirm('Xoá thành viên "' + name + '"?')) return;
+  memberObjects = memberObjects.filter(function(m){return m.name!==name});
+  renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect(); updateStats();
+  await sbDeleteMember(name);
+}
+
+function familyTagHtml(family) {
+  if (!family) return '';
+  var cls = family.includes('Thảo') ? 'family-thao' : 'family-yen';
+  return '<span class="family-tag ' + cls + '">' + escHtml(family) + '</span>';
 }
 
 function renderMembers() {
   var el = document.getElementById('member-chips');
-  document.getElementById('total-members').textContent = members.length;
-  if (!members.length) {
-    el.innerHTML = '<span style="font-size:13px;color:var(--text2)">Chưa có thành viên nào</span>';
-    renderPaymentMemberSelect();
-    return;
+  document.getElementById('total-members').textContent = memberObjects.length;
+  if (!memberObjects.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:1rem">Chưa có thành viên nào</div>';
+    renderPaymentMemberSelect(); return;
   }
-  el.innerHTML = members.map(function(m){
-    return '<span class="member-chip"><span>' + escHtml(m) + '</span><button onclick="removeMember(\'' + escHtml(m) + '\')">×</button></span>';
-  }).join('');
+  // Group by family
+  var groups = {};
+  memberObjects.forEach(function(m){
+    var f = m.family || 'Khác';
+    if (!groups[f]) groups[f] = [];
+    groups[f].push(m);
+  });
+  var html = '';
+  Object.keys(groups).forEach(function(f){
+    var cls = f.includes('Thảo') ? 'family-thao' : f.includes('Yến') ? 'family-yen' : '';
+    html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">' + escHtml(f) + '</div>';
+    html += groups[f].map(function(m){
+      return '<span class="member-chip">' +
+        '<span>' + escHtml(m.name) + '</span>' +
+        '<button onclick="openMemberEdit(\'' + String(m.id) + '\')" style="color:var(--blue-text);font-size:12px;margin-right:2px">✏️</button>' +
+        '<button onclick="removeMember(\'' + escHtml(m.name) + '\')">×</button></span>';
+    }).join('');
+    html += '</div>';
+  });
+  el.innerHTML = html;
   renderPaymentMemberSelect();
+}
+
+function openMemberEdit(id) {
+  var m = memberObjects.find(function(x){return String(x.id)===String(id)});
+  if (!m) return;
+  document.getElementById('medit-id').value = id;
+  document.getElementById('medit-name').value = m.name;
+  document.getElementById('medit-family').value = m.family;
+  document.getElementById('member-edit-modal').style.display = 'flex';
+}
+function closeMemberEdit() { document.getElementById('member-edit-modal').style.display = 'none'; }
+async function saveMemberEdit() {
+  var id = document.getElementById('medit-id').value;
+  var name = document.getElementById('medit-name').value.trim();
+  var family = document.getElementById('medit-family').value;
+  if (!name) { alert('Nhập tên'); return; }
+  if (!family) { alert('Chọn gia đình'); return; }
+  var btn = document.getElementById('medit-save-btn');
+  btn.textContent = '⏳...'; btn.disabled = true;
+  var updated = await sbUpdateMember(id, name, family);
+  if (updated) {
+    memberObjects = memberObjects.map(function(m){
+      return String(m.id)===String(id) ? {id:m.id, name:name, family:family} : m;
+    });
+    renderMembers(); renderMemberCheckboxes(); renderPaymentMemberSelect(); updateStats();
+  }
+  btn.textContent = '💾 Lưu'; btn.disabled = false;
+  closeMemberEdit();
 }
 
 function renderPaymentMemberSelect() {
@@ -418,24 +558,25 @@ function renderPaymentMemberSelect() {
   if (!el) return;
   var current = el.value;
   el.innerHTML = '<option value="">-- Chọn thành viên --</option>' +
-    members.map(function(m){
-      return '<option value="' + escHtml(m) + '"' + (m === current ? ' selected' : '') + '>' + escHtml(m) + '</option>';
+    memberObjects.map(function(m){
+      return '<option value="' + escHtml(m.name) + '"' + (m.name===current?' selected':'') + '>' +
+        escHtml(m.name) + (m.family ? ' (' + m.family + ')' : '') + '</option>';
     }).join('');
 }
 
 function renderMemberCheckboxes() {
   var el = document.getElementById('member-checkboxes');
-  el.innerHTML = members.map(function(m){
-    return '<span class="checkbox-chip" data-member="' + escHtml(m) + '" onclick="this.classList.toggle(\'selected\')">' + escHtml(m) + '</span>';
+  el.innerHTML = memberObjects.map(function(m){
+    return '<span class="checkbox-chip" data-member="' + escHtml(m.name) + '" onclick="this.classList.toggle(\'selected\')">' + escHtml(m.name) + '</span>';
   }).join('');
 }
 
 // ── EXPENSE FORM ───────────────────────────────────────
 function setExpenseType(t) {
   expenseType = t;
-  document.getElementById('type-shared').classList.toggle('active', t === 'shared');
-  document.getElementById('type-personal').classList.toggle('active', t === 'personal');
-  document.getElementById('personal-members').style.display = t === 'personal' ? 'block' : 'none';
+  document.getElementById('type-shared').classList.toggle('active', t==='shared');
+  document.getElementById('type-personal').classList.toggle('active', t==='personal');
+  document.getElementById('personal-members').style.display = t==='personal' ? 'block' : 'none';
 }
 
 function previewReceipt(input) {
@@ -449,6 +590,7 @@ function previewReceipt(input) {
 
 async function addExpense() {
   var name = document.getElementById('exp-name').value.trim();
+  var category = document.getElementById('exp-category').value;
   var date = document.getElementById('exp-date').value;
   var amount = parseFloat(document.getElementById('exp-amount').value);
   var currency = document.getElementById('exp-currency').value;
@@ -456,12 +598,10 @@ async function addExpense() {
 
   if (!name || !date || !amount) { alert('Điền đầy đủ: tên, ngày, số tiền'); return; }
 
-  var forMembers = members.slice();
+  var forMembers = memberNames();
   if (expenseType === 'personal') {
     forMembers = [];
-    document.querySelectorAll('#member-checkboxes .selected').forEach(function(el){
-      forMembers.push(el.dataset.member);
-    });
+    document.querySelectorAll('#member-checkboxes .selected').forEach(function(el){ forMembers.push(el.dataset.member); });
     if (!forMembers.length) { alert('Chọn ít nhất 1 thành viên'); return; }
   }
 
@@ -470,37 +610,27 @@ async function addExpense() {
   if (fileInput.files && fileInput.files[0]) receiptFile = fileInput.files[0];
 
   var btn = document.getElementById('save-btn');
-  btn.textContent = '⏳ Đang lưu...';
-  btn.disabled = true;
+  btn.textContent = '⏳ Đang lưu...'; btn.disabled = true;
 
   var exp = {
-    id: Date.now(), name: name, date: date, amount: amount,
-    currency: currency, type: expenseType,
-    members: forMembers, note: note,
-    receipt_url: null, receiptFile: receiptFile
+    id: Date.now(), name:name, date:date, amount:amount,
+    currency:currency, type:expenseType, category:category,
+    members:forMembers, note:note, receipt_url:null, receiptFile:receiptFile
   };
 
   var saved = await sbInsertExpense(exp);
-  if (saved) {
-    expenses.unshift(saved);
-  } else {
-    exp.receiptFile = null;
-    expenses.unshift(exp);
-  }
+  if (saved) { expenses.unshift(saved); } else { exp.receiptFile=null; expenses.unshift(exp); }
 
-  // reset form
   document.getElementById('exp-name').value = '';
   document.getElementById('exp-amount').value = '';
   document.getElementById('exp-note').value = '';
+  document.getElementById('exp-category').value = '';
   document.getElementById('receipt-preview').style.display = 'none';
   fileInput.value = '';
   document.querySelectorAll('#member-checkboxes .selected').forEach(function(c){c.classList.remove('selected')});
-  btn.textContent = '💾 Lưu chi phí';
-  btn.disabled = false;
+  btn.textContent = '💾 Lưu chi phí'; btn.disabled = false;
 
-  renderExpenseList();
-  updateStats();
-  switchTab('list');
+  renderExpenseList(); updateStats(); switchTab('list');
 }
 
 // ── RENDER LIST ────────────────────────────────────────
@@ -508,78 +638,76 @@ function renderExpenseList() {
   var el = document.getElementById('expense-list');
   document.getElementById('expense-count').textContent = expenses.length + ' chi phí';
   if (!expenses.length) {
-    el.innerHTML = '<div class="empty-state">Chưa có chi phí nào.<br>Thêm từ tab "Thêm chi phí"</div>';
+    el.innerHTML = '<div class="empty-state">Chưa có chi phí nào.<br>Thêm từ tab "Thêm CP"</div>';
     return;
   }
   el.innerHTML = expenses.map(function(e){
-    var badge = e.type === 'shared'
+    var badge = e.type==='shared'
       ? '<span class="badge badge-shared">Chia đều</span>'
       : '<span class="badge badge-personal">Nhóm riêng</span>';
-    var mems = e.type === 'shared' ? 'Tất cả' : (e.members||[]).join(', ');
+    var catBadge = e.category ? '<span class="badge badge-cat">' + (CAT_ICONS[e.category]||'') + ' ' + escHtml(e.category) + '</span>' : '';
+    var mems = e.type==='shared' ? 'Tất cả' : (e.members||[]).join(', ');
     var receipt = e.receipt_url
       ? '<img src="' + e.receipt_url + '" class="receipt-thumb" onclick="window.open(\'' + e.receipt_url + '\',\'_blank\')" title="Xem biên lai">'
       : '';
     var note = e.note ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + escHtml(e.note) + '</div>' : '';
     var eid = String(e.id);
-    var html = '<div class="expense-item" id="exp-'+eid+'">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
-    html += '<div style="flex:1">';
-    html += '<div class="expense-name">'+escHtml(e.name)+'</div>';
-    html += '<div class="expense-meta">'+e.date+' &middot; '+escHtml(mems)+'</div>';
-    html += note;
-    html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">';
-    html += badge;
-    html += '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:var(--blue-text);border-color:var(--blue-border)" onclick="openEditById(\''+eid+'\')">&#9999;&#65039; S&#7917;a</button>';
-    html += '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595" onclick="deleteExpenseById(\''+eid+'\')">&#128465; X&oacute;a</button>';
-    html += '</div>';
-    html += receipt;
-    html += '</div>';
-    html += '<div class="expense-amount" style="margin-left:12px;white-space:nowrap">'+fmtRaw(e.amount, e.currency)+'</div>';
-    html += '</div></div>';
-    return html;
+    return '<div class="expense-item" id="exp-'+eid+'">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+      '<div style="flex:1">' +
+      '<div class="expense-name">' + escHtml(e.name) + '</div>' +
+      '<div class="expense-meta">' + e.date + ' &middot; ' + escHtml(mems) + '</div>' +
+      note +
+      '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px">' +
+      badge + catBadge +
+      '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:var(--blue-text);border-color:var(--blue-border)" onclick="openEditById(\''+eid+'\')">✏️ Sửa</button>' +
+      '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595" onclick="deleteExpenseById(\''+eid+'\')">🗑 Xóa</button>' +
+      '</div>' + receipt +
+      '</div>' +
+      '<div class="expense-amount" style="margin-left:12px;white-space:nowrap">' + fmtRaw(e.amount, e.currency) + '</div>' +
+      '</div></div>';
   }).join('');
 }
 
 // ── DELETE & EDIT ──────────────────────────────────────
 async function deleteExpenseById(id) {
   if (!confirm('Xóa hóa đơn này?')) return;
-  expenses = expenses.filter(function(e){return String(e.id) !== String(id)});
+  expenses = expenses.filter(function(e){return String(e.id)!==String(id)});
   renderExpenseList(); updateStats();
   await sbDeleteExpense(id);
 }
 
 function setEditType(t) {
-  document.getElementById('edit-type-shared').classList.toggle('active', t === 'shared');
-  document.getElementById('edit-type-personal').classList.toggle('active', t === 'personal');
-  document.getElementById('edit-personal-members').style.display = t === 'personal' ? 'block' : 'none';
+  document.getElementById('edit-type-shared').classList.toggle('active', t==='shared');
+  document.getElementById('edit-type-personal').classList.toggle('active', t==='personal');
+  document.getElementById('edit-personal-members').style.display = t==='personal' ? 'block' : 'none';
 }
 
 function openEditById(id) {
-  var e = expenses.find(function(x){return String(x.id) === String(id)});
+  var e = expenses.find(function(x){return String(x.id)===String(id)});
   if (!e) return;
   document.getElementById('edit-id').value = id;
   document.getElementById('edit-name').value = e.name;
+  document.getElementById('edit-category').value = e.category||'';
   document.getElementById('edit-date').value = e.date;
   document.getElementById('edit-amount').value = e.amount;
   document.getElementById('edit-currency').value = e.currency;
   document.getElementById('edit-note').value = e.note||'';
-  // Render member checkboxes
-  var currentMembers = e.members || [];
-  document.getElementById('edit-member-checkboxes').innerHTML = members.map(function(m){
-    var sel = currentMembers.indexOf(m) >= 0 ? ' selected' : '';
-    return '<span class="checkbox-chip' + sel + '" onclick="this.classList.toggle(\'selected\')">' + escHtml(m) + '</span>';
+  var currentMembers = e.members||[];
+  document.getElementById('edit-member-checkboxes').innerHTML = memberObjects.map(function(m){
+    var sel = currentMembers.indexOf(m.name)>=0 ? ' selected' : '';
+    return '<span class="checkbox-chip'+sel+'" onclick="this.classList.toggle(\'selected\')">' + escHtml(m.name) + '</span>';
   }).join('');
-  setEditType(e.type || 'shared');
+  setEditType(e.type||'shared');
   document.getElementById('edit-modal').style.display = 'flex';
 }
 
-function closeEdit() {
-  document.getElementById('edit-modal').style.display = 'none';
-}
+function closeEdit() { document.getElementById('edit-modal').style.display = 'none'; }
 
 async function saveEdit() {
   var id = document.getElementById('edit-id').value;
   var name = document.getElementById('edit-name').value.trim();
+  var category = document.getElementById('edit-category').value;
   var date = document.getElementById('edit-date').value;
   var amount = parseFloat(document.getElementById('edit-amount').value);
   var currency = document.getElementById('edit-currency').value;
@@ -588,21 +716,19 @@ async function saveEdit() {
   var btn = document.getElementById('edit-save-btn');
   btn.textContent = '⏳...'; btn.disabled = true;
   var editType = document.getElementById('edit-type-personal').classList.contains('active') ? 'personal' : 'shared';
-  var editMembers = members.slice();
+  var editMembers = memberNames();
   if (editType === 'personal') {
     editMembers = [];
-    document.querySelectorAll('#edit-member-checkboxes .selected').forEach(function(el){
-      editMembers.push(el.textContent);
-    });
-    if (!editMembers.length) { alert('Chọn ít nhất 1 thành viên'); btn.textContent = '💾 Lưu'; btn.disabled = false; return; }
+    document.querySelectorAll('#edit-member-checkboxes .selected').forEach(function(el){ editMembers.push(el.textContent); });
+    if (!editMembers.length) { alert('Chọn ít nhất 1 thành viên'); btn.textContent='💾 Lưu'; btn.disabled=false; return; }
   }
-  var payload = {name:name, date:date, amount:amount, currency:currency, note:note, type:editType, members:editMembers};
+  var payload = {name:name, category:category, date:date, amount:amount, currency:currency, note:note, type:editType, members:editMembers};
   var updated = await sbUpdateExpense(id, payload);
   if (updated) {
     expenses = expenses.map(function(e){return String(e.id)===String(id) ? Object.assign({},e,payload) : e});
     renderExpenseList(); updateStats();
   }
-  btn.textContent = '💾 Lưu'; btn.disabled = false;
+  btn.textContent='💾 Lưu'; btn.disabled=false;
   closeEdit();
 }
 
@@ -613,28 +739,18 @@ async function addPayment() {
   var currency = document.getElementById('pay-currency').value;
   var date = document.getElementById('pay-date').value;
   var note = document.getElementById('pay-note').value.trim();
-
   if (!member) { alert('Chọn thành viên'); return; }
   if (!amount || isNaN(amount)) { alert('Nhập số tiền'); return; }
   if (!date) { alert('Chọn ngày'); return; }
-
   var btn = document.getElementById('pay-save-btn');
   btn.textContent = '⏳ Đang lưu...'; btn.disabled = true;
-
-  var p = { member_name: member, amount: amount, currency: currency, date: date, note: note };
+  var p = {member_name:member, amount:amount, currency:currency, date:date, note:note};
   var saved = await sbInsertPayment(p);
-  if (saved) {
-    payments.unshift(saved);
-  } else {
-    payments.unshift(Object.assign({id: Date.now()}, p));
-  }
-
+  if (saved) { payments.unshift(saved); } else { payments.unshift(Object.assign({id:Date.now()}, p)); }
   document.getElementById('pay-amount').value = '';
   document.getElementById('pay-note').value = '';
   btn.textContent = '💾 Lưu khoản nhận'; btn.disabled = false;
-
-  renderPayments();
-  updateStats();
+  renderPayments(); updateStats();
 }
 
 function renderPayments() {
@@ -645,16 +761,18 @@ function renderPayments() {
     el.innerHTML = '<div class="empty-state">Chưa ghi nhận lần nào.<br>Thêm bên trên.</div>';
     return;
   }
-  el.innerHTML = payments.map(function(p) {
+  el.innerHTML = payments.map(function(p){
     var pid = String(p.id);
+    var fam = memberFamily(p.member_name);
     var noteHtml = p.note ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + escHtml(p.note) + '</div>' : '';
     return '<div class="expense-item">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
       '<div style="flex:1">' +
-      '<div class="expense-name">👤 ' + escHtml(p.member_name) + '</div>' +
+      '<div class="expense-name">👤 ' + escHtml(p.member_name) + ' ' + familyTagHtml(fam) + '</div>' +
       '<div class="expense-meta">' + p.date + '</div>' +
       noteHtml +
-      '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595;margin-top:4px" onclick="deletePaymentById(\'' + pid + '\')">🗑 Xóa</button>' +
+      '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:var(--blue-text);border-color:var(--blue-border);margin-top:4px;margin-right:4px" onclick="openPaymentEdit(\''+pid+'\')">✏️ Sửa</button>' +
+      '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#a32d2d;border-color:#f09595;margin-top:4px" onclick="deletePaymentById(\''+pid+'\')">🗑 Xóa</button>' +
       '</div>' +
       '<div class="expense-amount" style="margin-left:12px;white-space:nowrap;color:var(--green-text)">' + fmtRaw(p.amount, p.currency) + '</div>' +
       '</div></div>';
@@ -663,217 +781,178 @@ function renderPayments() {
 
 async function deletePaymentById(id) {
   if (!confirm('Xóa khoản nhận tiền này?')) return;
-  payments = payments.filter(function(p){ return String(p.id) !== String(id); });
+  payments = payments.filter(function(p){return String(p.id)!==String(id)});
   renderPayments(); updateStats();
   await sbDeletePayment(id);
 }
 
+function openPaymentEdit(id) {
+  var p = payments.find(function(x){return String(x.id)===String(id)});
+  if (!p) return;
+  document.getElementById('pedit-id').value = id;
+  document.getElementById('pedit-amount').value = p.amount;
+  document.getElementById('pedit-currency').value = p.currency;
+  document.getElementById('pedit-date').value = p.date;
+  document.getElementById('pedit-note').value = p.note||'';
+  // Render member select
+  var sel = document.getElementById('pedit-member');
+  sel.innerHTML = '<option value="">-- Chọn thành viên --</option>' +
+    memberObjects.map(function(m){
+      return '<option value="'+escHtml(m.name)+'"'+(m.name===p.member_name?' selected':'')+'>'+escHtml(m.name)+(m.family?' ('+m.family+')':'')+' </option>';
+    }).join('');
+  document.getElementById('payment-edit-modal').style.display = 'flex';
+}
+function closePaymentEdit() { document.getElementById('payment-edit-modal').style.display = 'none'; }
+async function savePaymentEdit() {
+  var id = document.getElementById('pedit-id').value;
+  var member = document.getElementById('pedit-member').value;
+  var amount = parseFloat(document.getElementById('pedit-amount').value);
+  var currency = document.getElementById('pedit-currency').value;
+  var date = document.getElementById('pedit-date').value;
+  var note = document.getElementById('pedit-note').value.trim();
+  if (!member) { alert('Chọn thành viên'); return; }
+  if (!amount || isNaN(amount)) { alert('Nhập số tiền'); return; }
+  if (!date) { alert('Chọn ngày'); return; }
+  var btn = document.getElementById('pedit-save-btn');
+  btn.textContent = '⏳...'; btn.disabled = true;
+  var payload = {member_name:member, amount:amount, currency:currency, date:date, note:note};
+  var updated = await sbUpdatePayment(id, payload);
+  if (updated) {
+    payments = payments.map(function(p){return String(p.id)===String(id) ? Object.assign({},p,payload) : p});
+    renderPayments(); updateStats();
+  }
+  btn.textContent = '💾 Lưu'; btn.disabled = false;
+  closePaymentEdit();
+}
+
 // ── STATS ──────────────────────────────────────────────
 function updateStats() {
-  var totalVND = 0, sharedVND = 0, personalVND = 0;
-  var perPerson = {};
-  members.forEach(function(m){perPerson[m] = 0});
+  var names = memberNames();
 
-  expenses.forEach(function(e){
-    var vnd = e.currency === 'TWD' ? e.amount * TWD_TO_VND : e.amount;
-    totalVND += vnd;
-    if (e.type === 'shared') {
-      sharedVND += vnd;
-      var share = members.length ? vnd / members.length : 0;
-      members.forEach(function(m){perPerson[m] = (perPerson[m]||0) + share});
-    } else {
-      personalVND += vnd;
-      var mems = e.members||[];
-      var share2 = mems.length ? vnd / mems.length : 0;
-      mems.forEach(function(m){if(perPerson[m] !== undefined) perPerson[m] += share2});
-    }
-  });
-
-  var totalStr = '';
-  if (totalOrigVND > 0) totalStr += Math.round(totalOrigVND).toLocaleString('vi-VN') + ' ₫';
-  if (totalOrigVND > 0 && totalOrigTWD > 0) totalStr += ' + ';
-  if (totalOrigTWD > 0) totalStr += 'NT$' + Math.round(totalOrigTWD).toLocaleString();
-  document.getElementById('total-all').textContent = totalStr || '0';
-  document.getElementById('total-all').style.fontSize = (totalOrigVND > 0 && totalOrigTWD > 0) ? '14px' : '22px';
-  document.getElementById('total-members').textContent = members.length;
-
-  // Tính riêng VNĐ và TWD cho từng người
-  var perPersonVND = {}, perPersonTWD = {};
-  members.forEach(function(m){ perPersonVND[m] = 0; perPersonTWD[m] = 0; });
-  expenses.forEach(function(e){
-    var amt = e.amount;
-    var isTWD = e.currency === 'TWD';
-    if (e.type === 'shared') {
-      var share = members.length ? amt / members.length : 0;
-      members.forEach(function(m){
-        if (isTWD) perPersonTWD[m] = (perPersonTWD[m]||0) + share;
-        else perPersonVND[m] = (perPersonVND[m]||0) + share;
-      });
-    } else {
-      var mems2 = e.members||[];
-      var share2 = mems2.length ? amt / mems2.length : 0;
-      mems2.forEach(function(m){
-        if (perPersonVND[m] !== undefined) {
-          if (isTWD) perPersonTWD[m] = (perPersonTWD[m]||0) + share2;
-          else perPersonVND[m] = (perPersonVND[m]||0) + share2;
-        }
-      });
-    }
-  });
-
-  var pb = document.getElementById('person-breakdown');
-  if (!members.length) {
-    pb.innerHTML = '<div class="empty-state">Thêm thành viên để xem</div>';
-  } else {
-    pb.innerHTML = members.map(function(m){
-      var vnd = perPersonVND[m]||0;
-      var twd = perPersonTWD[m]||0;
-      var initials = m.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();
-      var amtHTML = '';
-      if (vnd > 0) amtHTML += '<div style="font-size:14px;font-weight:600;text-align:right">' + Math.round(vnd).toLocaleString('vi-VN') + ' ₫</div>';
-      if (twd > 0) amtHTML += '<div style="font-size:14px;font-weight:600;text-align:right;color:var(--blue-text)">NT$' + Math.round(twd).toLocaleString() + '</div>';
-      if (!amtHTML) amtHTML = '<div style="font-size:14px;color:var(--text3)">0 ₫</div>';
-      return '<div class="person-row"><div style="display:flex;align-items:center;gap:10px"><div class="avatar">' + initials + '</div><span style="font-size:14px">' + escHtml(m) + '</span></div><div>' + amtHTML + '</div></div>';
-    }).join('');
-  }
-
-  // Tách theo đơn vị tiền tệ gốc
+  // Tổng theo tiền gốc
   var totalOrigVND = 0, totalOrigTWD = 0;
   var sharedOrigVND = 0, sharedOrigTWD = 0;
   var personalOrigVND = 0, personalOrigTWD = 0;
   expenses.forEach(function(e){
     if (e.currency === 'VND') {
       totalOrigVND += e.amount;
-      if (e.type === 'shared') sharedOrigVND += e.amount;
-      else personalOrigVND += e.amount;
+      if (e.type==='shared') sharedOrigVND += e.amount; else personalOrigVND += e.amount;
     } else {
       totalOrigTWD += e.amount;
-      if (e.type === 'shared') sharedOrigTWD += e.amount;
-      else personalOrigTWD += e.amount;
+      if (e.type==='shared') sharedOrigTWD += e.amount; else personalOrigTWD += e.amount;
     }
   });
 
+  // Total display
+  var totalStr = '';
+  if (totalOrigVND > 0) totalStr += Math.round(totalOrigVND).toLocaleString('vi-VN') + ' ₫';
+  if (totalOrigVND > 0 && totalOrigTWD > 0) totalStr += '\n+ ';
+  if (totalOrigTWD > 0) totalStr += 'NT$' + Math.round(totalOrigTWD).toLocaleString();
+  var totalEl = document.getElementById('total-all');
+  totalEl.innerHTML = totalStr ? totalStr.replace('\n','<br>') : '0';
+  totalEl.style.fontSize = (totalOrigVND > 0 && totalOrigTWD > 0) ? '13px' : '20px';
+  document.getElementById('total-members').textContent = memberObjects.length;
+
+  // Per-person VNĐ & TWD
+  var perVND = {}, perTWD = {};
+  names.forEach(function(m){ perVND[m]=0; perTWD[m]=0; });
+  expenses.forEach(function(e){
+    var amt = e.amount, isTWD = e.currency==='TWD';
+    if (e.type==='shared') {
+      var share = names.length ? amt/names.length : 0;
+      names.forEach(function(m){ if(isTWD) perTWD[m]+=share; else perVND[m]+=share; });
+    } else {
+      var mems = e.members||[], s2 = mems.length ? amt/mems.length : 0;
+      mems.forEach(function(m){ if(perVND[m]!==undefined){ if(isTWD) perTWD[m]+=s2; else perVND[m]+=s2; } });
+    }
+  });
+
+  // Render person cards
+  var pb = document.getElementById('person-breakdown');
+  if (!memberObjects.length) {
+    pb.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Thêm thành viên để xem</div>';
+  } else {
+    pb.innerHTML = memberObjects.map(function(m){
+      var vnd = Math.round(perVND[m.name]||0);
+      var twd = Math.round(perTWD[m.name]||0);
+      var fam = m.family;
+      var famCls = fam && fam.includes('Thảo') ? 'family-thao' : fam && fam.includes('Yến') ? 'family-yen' : '';
+      var amtMain = '', amtSub = '';
+      if (vnd > 0) amtMain = '<div class="person-card-amt">' + fmtCompact(vnd) + ' ₫</div>';
+      if (twd > 0) amtSub = '<div class="person-card-amt-sub">NT$' + Math.round(twd).toLocaleString() + '</div>';
+      if (!vnd && !twd) amtMain = '<div class="person-card-zero">0 ₫</div>';
+      return '<div class="person-card">' +
+        '<div class="person-card-name">' + escHtml(m.name) + '</div>' +
+        (fam ? '<div class="person-card-family"><span class="family-tag '+famCls+'">' + escHtml(fam) + '</span></div>' : '<div style="height:4px"></div>') +
+        amtMain + amtSub +
+        '</div>';
+    }).join('');
+  }
+
+  // Category breakdown
+  var catVND = {}, catTWD = {};
+  CATEGORIES.forEach(function(c){ catVND[c]=0; catTWD[c]=0; });
+  expenses.forEach(function(e){
+    var cat = e.category||'';
+    if (!catVND[cat] && cat) { catVND[cat]=0; catTWD[cat]=0; }
+    if (cat) {
+      if (e.currency==='VND') catVND[cat]+=e.amount;
+      else catTWD[cat]+=e.amount;
+    }
+  });
+  var cbHTML = '';
+  CATEGORIES.forEach(function(cat){
+    var v = Math.round(catVND[cat]||0), t = Math.round(catTWD[cat]||0);
+    if (!v && !t) return;
+    cbHTML += '<div class="person-row"><div style="font-size:14px">' + (CAT_ICONS[cat]||'') + ' ' + escHtml(cat) + '</div>' +
+      '<div style="text-align:right">' +
+      (v ? '<div style="font-weight:600;font-size:14px">' + v.toLocaleString('vi-VN') + ' ₫</div>' : '') +
+      (t ? '<div style="font-weight:600;font-size:13px;color:var(--blue-text)">NT$' + t.toLocaleString() + '</div>' : '') +
+      '</div></div>';
+  });
+  document.getElementById('cat-breakdown').innerHTML = cbHTML || '<div class="empty-state" style="padding:1rem">Chưa có dữ liệu</div>';
+
+  // Type breakdown (shared/personal)
   var tbHTML = '';
-  // Tổng VNĐ
   if (totalOrigVND > 0) {
     tbHTML += '<div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin:8px 0 4px">CHI BẰNG VNĐ</div>';
     tbHTML += '<div class="person-row"><div style="font-size:14px">🍽 Chia đều</div><span style="font-weight:600">' + Math.round(sharedOrigVND).toLocaleString('vi-VN') + ' ₫</span></div>';
     tbHTML += '<div class="person-row"><div style="font-size:14px">🏨 Nhóm riêng</div><span style="font-weight:600">' + Math.round(personalOrigVND).toLocaleString('vi-VN') + ' ₫</span></div>';
     tbHTML += '<div class="person-row" style="background:var(--bg);margin:0 -4px;padding:8px 4px;border-radius:6px"><div style="font-size:13px;font-weight:600">Tổng VNĐ</div><span style="font-weight:700">' + Math.round(totalOrigVND).toLocaleString('vi-VN') + ' ₫</span></div>';
   }
-  // Tổng TWD
   if (totalOrigTWD > 0) {
     tbHTML += '<div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin:12px 0 4px">CHI BẰNG TWD</div>';
     tbHTML += '<div class="person-row"><div style="font-size:14px">🍽 Chia đều</div><span style="font-weight:600">NT$' + Math.round(sharedOrigTWD).toLocaleString() + '</span></div>';
     tbHTML += '<div class="person-row"><div style="font-size:14px">🏨 Nhóm riêng</div><span style="font-weight:600">NT$' + Math.round(personalOrigTWD).toLocaleString() + '</span></div>';
     tbHTML += '<div class="person-row" style="background:var(--bg);margin:0 -4px;padding:8px 4px;border-radius:6px"><div style="font-size:13px;font-weight:600">Tổng TWD</div><span style="font-weight:700">NT$' + Math.round(totalOrigTWD).toLocaleString() + '</span></div>';
   }
-  if (!tbHTML) tbHTML = '<div class="empty-state" style="padding:1rem">Chưa có chi phí</div>';
-  document.getElementById('type-breakdown').innerHTML = tbHTML;
-
-  // ── Đối soát thanh toán ────────────────────────────
-  var bb = document.getElementById('balance-breakdown');
-  if (!members.length) {
-    bb.innerHTML = '<div class="empty-state" style="padding:1rem">Thêm thành viên để xem</div>';
-    return;
-  }
-
-  // Tổng chi phí mỗi người (VNĐ, TWD riêng)
-  var needVND = {}, needTWD = {};
-  members.forEach(function(m){ needVND[m] = 0; needTWD[m] = 0; });
-  expenses.forEach(function(e){
-    var amt = e.amount;
-    var isTWD = e.currency === 'TWD';
-    if (e.type === 'shared') {
-      var share = members.length ? amt / members.length : 0;
-      members.forEach(function(m){
-        if (isTWD) needTWD[m] += share; else needVND[m] += share;
-      });
-    } else {
-      var mems3 = e.members || [];
-      var share3 = mems3.length ? amt / mems3.length : 0;
-      mems3.forEach(function(m){
-        if (needVND[m] !== undefined) {
-          if (isTWD) needTWD[m] += share3; else needVND[m] += share3;
-        }
-      });
-    }
-  });
-
-  // Tổng đã gửi mỗi người (VNĐ, TWD riêng)
-  var paidVND = {}, paidTWD = {};
-  members.forEach(function(m){ paidVND[m] = 0; paidTWD[m] = 0; });
-  payments.forEach(function(p){
-    if (paidVND[p.member_name] !== undefined) {
-      if (p.currency === 'TWD') paidTWD[p.member_name] += p.amount;
-      else paidVND[p.member_name] += p.amount;
-    }
-  });
-
-  bb.innerHTML = members.map(function(m){
-    var nv = Math.round(needVND[m]||0), nt = Math.round(needTWD[m]||0);
-    var pv = Math.round(paidVND[m]||0), pt = Math.round(paidTWD[m]||0);
-    var remVND = nv - pv, remTWD = nt - pt;
-    var initials = m.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();
-
-    function amtLine(vnd, twd, colorClass) {
-      var parts = [];
-      if (vnd !== 0) parts.push('<span style="' + colorClass + '">' + Math.abs(vnd).toLocaleString('vi-VN') + ' ₫</span>');
-      if (twd !== 0) parts.push('<span style="' + colorClass + '">NT$' + Math.abs(twd).toLocaleString() + '</span>');
-      return parts.length ? parts.join(' + ') : '<span style="color:var(--text3)">0</span>';
-    }
-
-    var remSign = (remVND > 0 || remTWD > 0) ? 'còn thiếu' : (remVND < 0 || remTWD < 0) ? 'dư' : 'đủ';
-    var remColor = remSign === 'còn thiếu' ? 'color:#a32d2d;font-weight:600' : remSign === 'dư' ? 'color:var(--green-text);font-weight:600' : 'color:var(--text3)';
-
-    return '<div style="border-bottom:0.5px solid var(--border);padding:10px 0">' +
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
-      '<div class="avatar">' + initials + '</div>' +
-      '<span style="font-size:14px;font-weight:500">' + escHtml(m) + '</span>' +
-      '<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg);' + remColor + '">' + remSign + '</span>' +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:11px">' +
-      '<div style="background:var(--bg);border-radius:6px;padding:6px 8px"><div style="color:var(--text3);margin-bottom:2px">Cần trả</div>' + amtLine(nv, nt, 'color:var(--text);font-weight:600') + '</div>' +
-      '<div style="background:var(--green-bg);border-radius:6px;padding:6px 8px"><div style="color:var(--green-text);margin-bottom:2px">Đã gửi</div>' + amtLine(pv, pt, 'color:var(--green-text);font-weight:600') + '</div>' +
-      '<div style="background:' + (remSign==='còn thiếu'?'#fcebeb':remSign==='dư'?'var(--blue-bg)':'var(--bg)') + ';border-radius:6px;padding:6px 8px"><div style="' + remColor + ';margin-bottom:2px">Còn lại</div>' + amtLine(Math.abs(remVND), Math.abs(remTWD), remColor) + '</div>' +
-      '</div></div>';
-  }).join('') + '<div style="height:4px"></div>';
-
+  document.getElementById('type-breakdown').innerHTML = tbHTML || '<div class="empty-state" style="padding:1rem">Chưa có chi phí</div>';
 }
 
 // ── FORMAT ─────────────────────────────────────────────
-function fmtVND(vnd) {
-  if (displayCurrency === 'VND') return Math.round(vnd).toLocaleString('vi-VN') + ' ₫';
-  return 'NT$' + Math.round(vnd / TWD_TO_VND).toLocaleString();
+function fmtCompact(vnd) {
+  if (vnd >= 1000000) return (vnd/1000000).toFixed(1).replace('.0','') + ' tr';
+  if (vnd >= 1000) return Math.round(vnd/1000) + 'k';
+  return vnd.toLocaleString('vi-VN');
 }
 function fmtRaw(amount, currency) {
   if (displayCurrency === 'VND') {
-    var vnd = currency === 'TWD' ? Math.round(amount * TWD_TO_VND) : Math.round(amount);
+    var vnd = currency==='TWD' ? Math.round(amount*TWD_TO_VND) : Math.round(amount);
     return vnd.toLocaleString('vi-VN') + ' ₫';
   } else {
-    var twd = currency === 'VND' ? Math.round(amount / TWD_TO_VND) : Math.round(amount);
+    var twd = currency==='VND' ? Math.round(amount/TWD_TO_VND) : Math.round(amount);
     return 'NT$' + twd.toLocaleString();
   }
 }
-function escHtml(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function setCurrency(c) {
-  displayCurrency = c;
-  document.getElementById('cur-vnd').classList.toggle('active', c === 'VND');
-  document.getElementById('cur-twd').classList.toggle('active', c === 'TWD');
-  updateStats();
-  renderExpenseList();
-}
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── EXPORT ─────────────────────────────────────────────
 function exportCSV() {
   if (!expenses.length) { alert('Chưa có dữ liệu'); return; }
-  var rows = [['Tên chi phí','Ngày','Số tiền','Đơn vị','Loại','Thành viên','Ghi chú','Biên lai']];
+  var rows = [['Tên chi phí','Phân loại','Ngày','Số tiền','Đơn vị','Loại','Thành viên','Ghi chú','Biên lai']];
   expenses.forEach(function(e){
-    rows.push([e.name, e.date, e.amount, e.currency,
-      e.type === 'shared' ? 'Chia đều' : 'Nhóm riêng',
+    rows.push([e.name, e.category||'', e.date, e.amount, e.currency,
+      e.type==='shared' ? 'Chia đều' : 'Nhóm riêng',
       (e.members||[]).join('; '), e.note||'', e.receipt_url||'']);
   });
   var csv = rows.map(function(r){
@@ -882,24 +961,24 @@ function exportCSV() {
   var blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'chi-phi-du-lich.csv';
+  a.download = 'chi-phi-taiwan-2026.csv';
   a.click();
 }
 
 // ── TAB ────────────────────────────────────────────────
 function switchTab(t) {
   var tabs = ['stats','expense','list','payments','members'];
-  document.querySelectorAll('.tab').forEach(function(el,i){el.classList.toggle('active', tabs[i] === t)});
+  document.querySelectorAll('.tab').forEach(function(el,i){el.classList.toggle('active', tabs[i]===t)});
   document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
   document.getElementById('tab-' + t).classList.add('active');
-  if (t === 'list') renderExpenseList();
-  if (t === 'stats') updateStats();
-  if (t === 'payments') renderPayments();
+  if (t==='list') renderExpenseList();
+  if (t==='stats') updateStats();
+  if (t==='payments') renderPayments();
 }
 
 function setNotice(type, msg) {
   var el = document.getElementById('sb-notice');
-  el.className = 'notice ' + (type === 'ok' ? 'ok' : 'warn');
+  el.className = 'notice ' + (type==='ok' ? 'ok' : 'warn');
   el.innerHTML = msg;
 }
 
